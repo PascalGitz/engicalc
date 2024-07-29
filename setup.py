@@ -6,7 +6,11 @@ setup(
     packages=find_packages(),
     install_requires=[
         # List your package dependencies here
-        # e.g. 'numpy', 'pandas',
+        'numpy', 
+        'sympy',
+        'contextlib',
+        'io',
+        'IPython'
     ],
     entry_points={
         'console_scripts': [
