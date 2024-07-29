@@ -5,16 +5,20 @@ from sympy import Symbol, latex
 import numpy as np
 
 
-def put_out(offset=0, precision=2, rows=3, horizontal=True) -> None:
+def put_out(offset: int = 0, precision: int = 2, rows: int = 3, horizontal: bool = True) -> None:
     """
     Renders the variables and their values as LaTeX equations in a Jupyter notebook.
 
-    Parameters:
-    - offset (int): The number of previous cells to include for variable extraction.
-    - precision (int): The precision for numerical values.
-    - rows (int): Maximum number of equations per row in horizontal display.
-    - horizontal (bool): Whether to display equations horizontally or vertically.
+    Args:
+        offset (int): The number of previous cells to include for variable extraction. Defaults to 0.
+        precision (int): The precision for numerical values. Defaults to 2.
+        rows (int): Maximum number of equations per row in horizontal display. Defaults to 3.
+        horizontal (bool): Whether to display equations horizontally or vertically. Defaults to True.
+
+    Returns:
+        None
     """
+    
     ipy = get_ipython()
     out = io.StringIO()
 
