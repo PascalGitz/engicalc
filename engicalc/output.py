@@ -5,7 +5,7 @@ from sympy import Symbol, latex
 import numpy as np
 
 
-def put_out(offset=0, precision=2, rows=3, horizontal=True):
+def put_out(offset=0, precision=2, rows=3, horizontal=True) -> None:
     """
     Renders the variables and their values as LaTeX equations in a Jupyter notebook.
 
