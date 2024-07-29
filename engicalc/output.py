@@ -59,28 +59,26 @@ def put_out(offset: int = 0, precision: int = 2, rows: int = 3, horizontal: bool
         # Horizontal display with aligned '=' signs
         var_list = list(formatted_vars.items())
 
-        # If only one variable is in the cell, it gets rendered as an equation
-        if len(var_list)==1:
-            markdown_str = f"$${latex(Symbol(var_list[0][0]))} = {var_list[0][1]}$$"
+        # check if there are less variables than rows. This results in clean aligning of the equations
+        if len(var_list)<rows:
+            rows = len(var_list)
+        
+        markdown_str = "$$\n\\begin{aligned}\n"
+        # Iterate through the variables
+        for i in range(0, len(var_list), rows):
+                row = var_list[i : i + rows]
+                row_str = " \\quad & ".join(
+                    [f"{latex(Symbol(var_name))} & = {value}" for var_name, value in row]
+                )
+                # Add placeholders for missing variables in the row
+                if len(row) < rows & rows!=1:
+                    row_str += " \\quad & " * (rows - len(row)) + " \n"
 
-        # Otherwise it will render it as a aligned latexobject
-        if len(var_list)>1:
-            markdown_str = "$$\n\\begin{aligned}\n"
-            # Iterate through the variables
-            for i in range(0, len(var_list), rows):
-                    row = var_list[i : i + rows]
-                    row_str = " \\quad & ".join(
-                        [f"{latex(Symbol(var_name))} & = {value}" for var_name, value in row]
-                    )
-                    # Add placeholders for missing variables in the row
-                    if len(row) < rows & rows!=1:
-                        row_str += " \\quad & " * (rows - len(row)) + " \n"
-
-                    markdown_str += row_str + " \\\\ \n"
-            # strip the last space
-            if markdown_str.endswith(" \\\\ \n"):
-                markdown_str = markdown_str[:-4]
-            markdown_str += "\\end{aligned}\n$$"
+                markdown_str += row_str + " \\\\ \n"
+        # strip the last space
+        if markdown_str.endswith(" \\\\ \n"):
+            markdown_str = markdown_str[:-4]
+        markdown_str += "\\end{aligned}\n$$"
 
     else:
         markdown_str = ""
