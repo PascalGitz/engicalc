@@ -2,6 +2,7 @@ from IPython.display import display, Markdown, Latex
 import io
 from contextlib import redirect_stdout
 from sympy import Symbol, latex
+import numpy as np
 
 
 def put_out(offset=0, precision=2, rows=3, horizontal=True):
@@ -25,9 +26,10 @@ def put_out(offset=0, precision=2, rows=3, horizontal=True):
     lines = out.getvalue().replace(" ", "").split("\n")
     variable_names = [line.split("=")[0] for line in lines if "=" in line]
 
-    # Get the current global variables
-    g = globals()
-    variables = {name: g[name] for name in variable_names if name in g}
+    # Get the current global variables from the IPython user namespace
+    user_ns = ipy.user_ns
+    variables = {name: user_ns[name] for name in variable_names if name in user_ns}
+
 
     def format_value(value):
         """Formats the value based on its type."""
