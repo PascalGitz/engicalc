@@ -7,6 +7,7 @@ engicalc/output.py
 engicalc.egg-info/PKG-INFO
 engicalc.egg-info/SOURCES.txt
 engicalc.egg-info/dependency_links.txt
+engicalc.egg-info/requires.txt
 engicalc.egg-info/top_level.txt
 tests/__init__.py
 tests/test_main.py

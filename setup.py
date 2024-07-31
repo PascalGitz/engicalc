@@ -8,9 +8,6 @@ setup(
         # List your package dependencies here
         'numpy', 
         'sympy',
-        'contextlib',
-        'io',
-        'IPython'
     ],
     entry_points={
         'console_scripts': [
