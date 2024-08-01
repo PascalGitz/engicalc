@@ -1,6 +1,6 @@
 from IPython.display import Markdown, display 
 
-def kriechdehnung_SIA262_12(psi, epsilon_c_el, background=False):
+def kriechdehnung_SIA262_12(psi, epsilon_c_el:float, background=False):
     """
     Berechnung der Kriechdehnung des Betons gemäss SIA 262:2013, Abschnitt 3.1.2.6.1.
     Diese Funktion berechnet die Kriechdehnung basierend auf der elastischen Dehnung und der Kriechzahl.
