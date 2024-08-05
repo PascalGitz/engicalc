@@ -15,7 +15,4 @@ Once the calculations are complete, they can be output as Word files using Quart
 
 ## Installation
 
-To install EngiCalc, use pip:
-
-```bash
-pip install engicalc
+Install from this Repo
