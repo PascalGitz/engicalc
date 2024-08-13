@@ -86,3 +86,48 @@ def put_out(offset: int = 0, precision: int = 2, rows: int = 3, horizontal: bool
             markdown_str += f"$${latex(Symbol(var_name))} = {value}$$\n\n"
 
     display(Markdown(markdown_str))
+
+
+def dict_to_markdown_table(data: dict) -> str:
+    if not data:
+        return ""
+    
+    # Extract keys and values
+    items = list(data.items())
+    rows = []
+    
+    # Pair items into rows with 4 columns (2 key-value pairs per row)
+    for i in range(0, len(items), 2):
+        row = []
+        for j in range(2):
+            if i + j < len(items):
+                key, value = items[i + j]
+                row.extend([str(key), str(value)])
+            else:
+                row.extend(["-", "-"])  # Fill empty cells for incomplete rows
+        rows.append(row)
+    
+    # Headers for the 4 columns
+    headers = ["Bezeichnung", "Wert", "Bezeichnung", "Wert"]
+    
+    # Calculate column widths
+    col_widths = [max(len(row[i]) for row in [headers] + rows) for i in range(4)]
+    
+    # Create the markdown table
+    table = []
+    
+    # Header row
+    header_row = "| " + " | ".join(headers[i].ljust(col_widths[i]) for i in range(4)) + " |"
+    table.append(header_row)
+    
+    # Divider
+    divider = "| " + " | ".join("-" * col_widths[i] for i in range(4)) + " |"
+    table.append(divider)
+    
+    # Data rows
+    for row in rows:
+        row_str = "| " + " | ".join(row[i].ljust(col_widths[i]) for i in range(4)) + " |"
+        table.append(row_str)
+    
+    return "\n".join(table)
+
