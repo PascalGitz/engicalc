@@ -70,7 +70,7 @@ def format_name(name: str, symbols: dict = special_characters) -> str:
     return name_replaced
 
 
-def put_out(offset: int = 0, rows: int = 3,) -> None:
+def put_out(precision: int = 2, offset: int = 0, rows: int = 3,) -> None:
     """
     Renders the variables and their values as LaTeX equations in a Jupyter notebook.
 
@@ -101,7 +101,7 @@ def put_out(offset: int = 0, rows: int = 3,) -> None:
     variables = {name: user_ns[name] for name in variable_names if name in user_ns}
 
     # Format the variables and their values 
-    formatted_vars = {format_name(name, special_characters): format_value(value) for name, value in variables.items()}
+    formatted_vars = {format_name(name, special_characters): format_value(value ,precision=precision) for name, value in variables.items()}
 
     # Horizontal display with aligned '=' signs
     var_list = list(formatted_vars.items())
