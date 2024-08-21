@@ -2,15 +2,16 @@ from IPython.display import display, Markdown
 import io
 import re
 from contextlib import redirect_stdout
-from sympy import Symbol, latex
+from sympy import Symbol, latex, Matrix
 import numpy as np
 
 
 # Define special characters and symbols
 special_characters = {
     "diam": r"\oslash",
-    "strich": r"'",
+    "apos": r"'",
     "sum": r"\sum",
+    "comma": r",",
 }
 
 def parse_cell_variables(offset: int = 0) -> dict:
@@ -40,23 +41,34 @@ def parse_cell_variables(offset: int = 0) -> dict:
 
     return variables
 
-
-# Formatting functions
-def format_value(value, precision: int = 2):
+    
+def format_value(value, precision: float = 2):
     """Formats the value based on its type."""
     if isinstance(value, (int, float)):
         return round(value, precision)
     elif isinstance(value, np.ndarray):
-        return np.array2string(np.round(value, precision), separator=",")
+        # Handle numpy arrays as matrices
+        rounded_value = np.round(value, precision)
+        matrix = Matrix(rounded_value.tolist())
+        return latex(matrix)
+    elif isinstance(value, list):
+        # Handle lists as vectors
+        formatted_list = [format_value(item, precision) for item in value]
+        return formatted_list
     elif hasattr(value, "magnitude"):
+        # Handle Pint quantities
         magnitude = np.round(value.magnitude, precision)
         if isinstance(magnitude, np.ndarray):
+            # Handle numpy arrays of Pint quantities as matrices
             magnitude_str = np.array2string(magnitude, separator=",")
-            return f"{magnitude_str} \\ {latex(Symbol(str(value.units)))}"
+            return f"{latex(Matrix(magnitude.tolist()))} \\ {latex(Symbol(str(value.units)))}"
         else:
+            # Handle scalar Pint quantities
             return f"{magnitude} \\ {latex(Symbol(str(value.units)))}"
     else:
         return value
+
+
 
 
 def format_name(name: str, symbols: dict = special_characters) -> str:
@@ -70,7 +82,7 @@ def format_name(name: str, symbols: dict = special_characters) -> str:
         if part == 'sum' and i+1 < len(name_parts) and name_parts[i+1] == '_':
             result_parts.append(symbols.get(part, part))
             i += 1
-        elif part == '_' and i+1 < len(name_parts) and name_parts[i+1] == 'strich':
+        elif part == '_' and i+1 < len(name_parts) and name_parts[i+1] == 'apos':
             result_parts.append(symbols.get(name_parts[i+1], name_parts[i+1]))
             i += 1
         elif part in symbols:
