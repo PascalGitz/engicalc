@@ -12,7 +12,6 @@ Requires-Python: >=3.6
 Description-Content-Type: text/markdown
 Requires-Dist: numpy
 Requires-Dist: sympy
-Requires-Dist: IPython
 
 # EngiCalc
 
@@ -31,7 +30,4 @@ Once the calculations are complete, they can be output as Word files using Quart
 
 ## Installation
 
-To install EngiCalc, use pip:
-
-```bash
-pip install engicalc
+Install from this Repo

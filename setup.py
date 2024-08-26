@@ -6,8 +6,10 @@ setup(
     packages=find_packages(),
     install_requires=[
         # List your package dependencies here
-        'numpy', 
-        'sympy',
+        'numpy>=1.26.4', 
+        'sympy>=1.12.1',
+        'jupyter>=1.0.0',
+        'pint @ git+https://github.com/PascalGitz/pint.git',
     ],
     entry_points={
         'console_scripts': [
