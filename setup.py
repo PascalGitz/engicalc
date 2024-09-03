@@ -2,12 +2,15 @@ from setuptools import setup, find_packages
 
 setup(
     name='engicalc',
-    version='0.1.0',
+    version='v0.0.1',
     packages=find_packages(),
     install_requires=[
         # List your package dependencies here
-        'numpy', 
-        'sympy',
+        'numpy>=1.26.4', 
+        'sympy>=1.12.1',
+        'jupyter>=1.0.0',
+        'pint @ git+https://github.com/PascalGitz/pint.git',
+        'tabulate'
     ],
     entry_points={
         'console_scripts': [
