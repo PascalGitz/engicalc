@@ -10,6 +10,7 @@ setup(
         'sympy>=1.12.1',
         'jupyter>=1.0.0',
         'pint @ git+https://github.com/PascalGitz/pint.git',
+        'tabulate'
     ],
     entry_points={
         'console_scripts': [
