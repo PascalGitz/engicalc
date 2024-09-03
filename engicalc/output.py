@@ -61,7 +61,7 @@ def format_name(name: str, symbols: dict = special_characters) -> str:
             i += 1  # Skip the underscore after 'sum'
 
         # Handle the '_strich' exception
-        elif part == '_' and i + 1 < len(name_parts) and name_parts[i + 1] == 'strich':
+        elif part == '_' and i + 1 < len(name_parts) and name_parts[i + 1] == 'apos':
             result_parts.append(symbols.get(name_parts[i + 1], name_parts[i + 1]))
             i += 1  # Skip both underscore and 'strich'
 
