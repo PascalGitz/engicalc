@@ -1,5 +1,6 @@
+LICENSE
 README.md
-setup.py
+pyproject.toml
 engicalc/__init__.py
 engicalc/concrete.py
 engicalc/main.py
