@@ -33,10 +33,16 @@ def parse_cell_variables(offset: int = 0) -> dict:
 
     # Extract variable names from the captured output
     lines = out.getvalue().replace(" ", "").split("\n")
-    variable_names = [line.split("=")[0] for line in lines if "=" in line]
-
+    variable_names = []
+    
+    for line in lines:
+        if "=" in line:
+            variable_names.append(line.split('=')[0])
+        else:
+            variable_names.append(line)
     # Get the current global variables from the IPython user namespace
     user_ns = ipy.user_ns
+
     variables = {name: user_ns[name] for name in variable_names if name in user_ns}
 
     return variables
