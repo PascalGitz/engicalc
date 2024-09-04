@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "engicalc"
+version = "0.0.1"
+description = "A Python package for engineering calculations and Jupyter cell outputs"
+readme = "README.md"
+requires-python = ">=3.6"
+license = { text = "MIT" }
+authors = [
+    { name = "Pascal Gitz", email = "pascal.gitz@hotmail.ch" },
+]
+urls = { "Homepage" = "https://github.com/PascalGitz/engicalc" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+dependencies = [
+    "jupyter>=1.0.0",
+    "numpy>=1.26.4",
+    "sympy>=1.12.1",
+    "tabulate>=0.9.0",
+    "pint@git+https://github.com/PascalGitz/pint.git" ,
+]
+
