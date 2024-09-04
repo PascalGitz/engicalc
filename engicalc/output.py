@@ -12,6 +12,7 @@ special_characters = {
     "apos": r"'",
     "sum": r"\sum",
     "comma": r",",
+    "txt": r"\text"
 }
 
 def parse_cell_variables(offset: int = 0) -> dict:
@@ -54,6 +55,7 @@ def format_name(name: str, symbols: dict = special_characters) -> str:
     
     # Regex to find words, underscores, and numbers separately
     name_parts = re.findall(r'[a-zA-Z]+|_|\d+', name)
+
     
     result_parts = []
     i = 0
@@ -65,6 +67,23 @@ def format_name(name: str, symbols: dict = special_characters) -> str:
         if part == 'sum' and i + 1 < len(name_parts) and name_parts[i + 1] == '_':
             result_parts.append(symbols.get(part, part))
             i += 1  # Skip the underscore after 'sum'
+        
+        # Handle the 'sum_' exception
+        if part == 'txt' and i + 1 < len(name_parts) and name_parts[i + 1] == '_':
+            result_parts.append(symbols.get(part, part))
+            result_parts.append('{')
+            result_parts.append(name_parts[i+2])
+            result_parts.append('}')
+            i += 3  # Skip the underscore after 'txt'
+        
+        # # Handle the 'txt' exception
+        # if part == 'txt' and i + 2 < len(name_parts) and name_parts[i + 1] == '_' and name_parts[i + 2] == '_':
+        #     result_parts.append(symbols.get(part, part))  # Append the symbol for 'txt' or 'txt' itself
+        #     result_parts.append('{')  # Replace the first '_' with '{'
+        #     result_parts.append('}')  # Replace the second '_' with '}'
+        #     i += 1  # Skip the next two underscores and move to the part after them
+        #     print(result_parts)
+            
 
         # Handle the '_strich' exception
         elif part == '_' and i + 1 < len(name_parts) and name_parts[i + 1] == 'apos':
@@ -120,7 +139,7 @@ def format_value(value, precision: float = 2):
 
 def dict_to_markdown_table(dict:dict, symbols: dict= special_characters, precision:int=2, tablefmt: str='pipe'):
     # Convert dictionary to list of lists with appropriate headers
-    formatted_data = [[key, '$'+str(format_value(value, precision))+'$'] for key, value in dict.items()]
+    formatted_data = [['$'+str(format_name(key))+'$', '$'+str(format_value(value, precision))+'$'] for key, value in dict.items()]
     headers = ['Bezeichnung', 'Wert']
 
     # Generate the Markdown table
