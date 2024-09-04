@@ -11,6 +11,8 @@ requires-python = ">=3.6"
 license = { text = "MIT" }
 authors = [
     { name = "Pascal Gitz", email = "pascal.gitz@hotmail.ch" },
+    { name = "Marco Imesch", email = "m.imesch@bs-ing.ch" },
+    
 ]
 urls = { "Homepage" = "https://github.com/PascalGitz/engicalc" }
 classifiers = [
