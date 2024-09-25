@@ -1,6 +1,7 @@
 from IPython.display import Markdown, display 
-from numpy import sqrt, pi, tan, arctan, cos, arccos, sin, arcsin
+from numpy import sqrt, pi, tan, arctan, cos, arccos, sin, arcsin, array, arange
 from engicalc.units import ureg, kg, t, mm, cm, dm, m, km, N, kN, MN, rad, deg, percent, s, MPa, los
+import matplotlib.pyplot as plt
 
 def schneelast_charakteristisch_SIA261_9(mu_i:float, C_e:float, C_T:float, s_k:float, background=False):
     """
@@ -134,11 +135,11 @@ def wind_staudruck_SIA261_11(c_h:float, q_p0:float, background=False):
   
     Beispiele:
     --------
-    >>> schneelast_charakteristisch_SIA261_9(1.78*kN/m**2, 1.0, 1.0, 1.5)
-    2.67*kN/m**2
+    >>> wind_staudruck_SIA261_11(1.02, 0.9*kN/m**2)
+    0.92*kN/m**2
     
-    >>> schneelast_charakteristisch_SIA261_9(0.9*kN/m**2, 1.0, 1.0, 0.8)
-    0.72*kN/m**2
+    >>> wind_staudruck_SIA261_11(1.7, 1.3*kN/m**2)
+    2.21*kN/m**2
     """
 
     if background == True:
@@ -151,7 +152,7 @@ $$ q_p = c_h \\cdot q_{p0} $$
         
     return c_h * q_p0
 
-def wind_profilbeiwert_SIA261_12(z:float, z_g:float, alpha_r:float, background=False):
+def wind_profilbeiwert_SIA261_12(z:float, z_g:float, alpha_r:float, plot=False, background=False):
     """
     Berechnung des Profilbeiwerts gemäss SIA 261:2014, Abschnitt 6.2.1.2\\
     Diese Funktion berechnet den Profilbeiwert.
@@ -159,13 +160,16 @@ def wind_profilbeiwert_SIA261_12(z:float, z_g:float, alpha_r:float, background=F
     Parameter:
     ----------
     z : float; 
-        Höhe über Bodenoberfläche.
+        Höhe über Bodenoberfläche. Eingabe in m **dimensionslos!**
         
     z_g : float; 
-        Die Gradientenhöhe.
+        Die Gradientenhöhe. Eingabe in m **dimensionslos!**
 
     alpha_r : float;
         Die Bodenrauigkeit.
+
+    plot : bool, optional;
+        Wenn True, wird die Figur aus SIA 261:2014 angezeigt mit entsprechendem Wert. Standard ist False.
         
     background : bool, optional; 
         Wenn True, wird die entsprechende Formel aus SIA 261:2014 angezeigt. Standard ist False.
@@ -181,12 +185,52 @@ def wind_profilbeiwert_SIA261_12(z:float, z_g:float, alpha_r:float, background=F
   
     Beispiele:
     --------
-    >>> schneelast_charakteristisch_SIA261_9(1.78*kN/m**2, 1.0, 1.0, 1.5)
-    2.67*kN/m**2
+    >>> wind_profilbeiwert_SIA261_12(10 , 526 , 0.3)
+    0.74
     
-    >>> schneelast_charakteristisch_SIA261_9(0.9*kN/m**2, 1.0, 1.0, 0.8)
-    0.72*kN/m**2
+    >>> wind_profilbeiwert_SIA261_12(50 , 450 , 0.23)
+    1.53*kN/m**2
     """
+
+    def get_c_h(z, z_g, alpha_r):
+        if alpha_r == 0.3 and z < 10:
+            z = 10
+        elif alpha_r == 0.3 and z > 30:
+            z_g = 450
+            alpha_r = 0.23
+        elif z < 5:
+            z = 5
+        return 1.6 * ((z / z_g) ** alpha_r + 0.375)**2
+
+    if plot == True:
+        z_plot = arange(0, 100, 0.1)
+
+        fig, fig_6 = plt.subplots(figsize=(3,3))
+        
+
+        c_h_II = []
+        c_h_IIa = []
+        c_h_III = []
+        c_h_IV = []
+        for zi in z_plot:
+            c_h_II.append(get_c_h(zi, 300, 0.16))
+            c_h_IIa.append(get_c_h(zi, 380, 0.19))
+            c_h_III.append(get_c_h(zi, 450, 0.23))
+            c_h_IV.append(get_c_h(zi, 526, 0.3))
+
+        fig_6.plot(get_c_h(z, z_g, alpha_r), z, 'o', color='#C80032', label='Wert', markersize=5)
+        fig_6.plot(c_h_II, z_plot, color='k', linestyle='solid', linewidth = 1, label='II')
+        fig_6.plot(c_h_IIa, z_plot, color='k', linestyle='dotted', linewidth = 1, label='IIa')
+        fig_6.plot(c_h_III, z_plot, color='k', linestyle='dashed', linewidth = 1, label='III')
+        fig_6.plot(c_h_IV, z_plot, color='k', linestyle='dashdot', linewidth = 1, label='IV')        
+
+        fig_6.set_xlabel("$c_h$")
+        fig_6.set_ylabel("$z$ in [m]")
+        fig_6.grid(True)
+        fig_6.legend()
+        fig_6.set_ylim([0, 100])
+        fig_6.set_xlim([0, 2.5])
+
 
     if background == True:
         display(Markdown("""
@@ -196,14 +240,4 @@ Der Profilbeiwert $c_h$ berücksichtigt das Windgeschwindigkeitsprofil in Funkti
 $$ c_h = 1.6 \\left[ \\left(\\frac{z}{z_g}\\right)^{\\alpha_r} + 0.375 \\right]^2 $$
         """))
 
-
-
-    if alpha_r == 0.3 and z < 10*m:
-        z = 10*m
-    elif alpha_r == 0.3 and z > 30*m:
-        z_g = 450 *m
-        alpha_r = 0.23
-    elif z < 5*m:
-        z = 5*m
-        
-    return 1.6 * ((z / z_g) ** alpha_r + 0.375)**2
+    return get_c_h(z, z_g, alpha_r)
