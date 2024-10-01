@@ -26,6 +26,7 @@ rad = ureg.rad
 deg = ureg.degree
 
 percent = ureg.percent
+permille = ureg.permille
 s = ureg.s
 
 MPa = ureg.MPa
