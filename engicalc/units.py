@@ -8,6 +8,9 @@ from pint import UnitRegistry
 ureg = UnitRegistry()
 ureg.formatter.default_format = "~L"
 
+ureg.define('Nm = newton * meter')
+ureg.define('kNm = kilonewton * meter')
+
 # Definition aller relevanten Einheiten
 kg = ureg.kg
 t = ureg.t
@@ -21,6 +24,9 @@ km = ureg.km
 N = ureg.N
 kN = ureg.kN
 MN = ureg.MN
+
+kNm = ureg.kNm
+Nm = ureg.Nm
 
 rad = ureg.rad
 deg = ureg.degree
