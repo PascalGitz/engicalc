@@ -1,5 +1,5 @@
 from engicalc.units import ureg, kg, t, mm, cm, dm, m, km, N, kN, MN, rad, deg, percent, s, MPa, los
-from engicalc.output import dict_to_markdown_table
+# from engicalc.output import dict_to_markdown_table
 from IPython.display import display, Markdown
 
 
@@ -11,8 +11,8 @@ class Material:
     def get_properties(self):
         return vars(self)
     
-    def _repr_markdown_(self):
-        return dict_to_markdown_table(self.get_properties())
+    # def _repr_markdown_(self):
+    #     return dict_to_markdown_table(self.get_properties())
         
 
 

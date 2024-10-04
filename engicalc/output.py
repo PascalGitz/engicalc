@@ -1,30 +1,20 @@
-from IPython.display import display, Markdown, Latex
 import io
-import re
 from contextlib import redirect_stdout
-from sympy import Symbol, latex, Matrix
+from sympy import sympify, latex, SympifyError, Symbol, Matrix
 import numpy as np
-from tabulate import tabulate
+from IPython.display import display, Markdown
+import re
 
-# Define special characters and symbols
-special_characters = {
-    "diam": r"\oslash",
-    "apos": r"'",
-    "sum": r"\sum",
-    "comma": r",",
-    "txt": r"\text"
-}
+import ast
+import io
+from contextlib import redirect_stdout
 
-def parse_cell_variables(offset: int = 0) -> dict:
-    """
-    Parses the cell history to extract variable names and their corresponding values.
+import ast
+import io
+from contextlib import redirect_stdout
 
-    Args:
-        offset (int): The number of previous cells to include for variable extraction. Defaults to 0.
+def cell_parser(offset: int = 0) -> dict:
 
-    Returns:
-        dict: A dictionary with variable names as keys and their corresponding values from the user namespace.
-    """
     ipy = get_ipython()
     out = io.StringIO()
 
@@ -32,82 +22,32 @@ def parse_cell_variables(offset: int = 0) -> dict:
     with redirect_stdout(out):
         ipy.run_line_magic("history", f"{ipy.execution_count - offset}")
 
-    # Extract variable names from the captured output
-    lines = out.getvalue().replace(" ", "").split("\n")
-    variable_names = []
-    
-    for line in lines:
-        if "=" in line:
-            variable_names.append(line.split('=')[0])
-        else:
-            variable_names.append(line)
-    # Get the current global variables from the IPython user namespace
+    # Get the current variables and their values from the user namespace
     user_ns = ipy.user_ns
 
-    variables = {name: user_ns[name] for name in variable_names if name in user_ns}
+    # Extract variable names and expressions from the captured output
+    lines = out.getvalue().replace(" ", "").split("\n")
+    variable_data = []
 
-    return variables
+    for line in lines:
+        if "=" in line:
+            # Split by '=' to separate the variable name and the expression
+            variable_name, expression = line.split('=', 1)
+
+            if variable_name in user_ns:
+                result = user_ns[variable_name]
+
+
+                variable_data.append({
+                    'variable_name': variable_name,
+                    'expression': expression,
+                    'result': result
+                })
+
+    return variable_data
 
 
 
-def format_name(name: str, symbols: dict = special_characters) -> str:
-    """Formats the input string with specific LaTeX replacements, handles underscores, and converts 'txt_' prefix to plain text."""
-    
-    # Regex to find words, underscores, and numbers separately
-    name_parts = re.findall(r'[a-zA-Z]+|_|\d+', name)
-
-    
-    result_parts = []
-    i = 0
-
-    while i < len(name_parts):
-        part = name_parts[i]
-        
-        # Handle the 'sum_' exception
-        if part == 'sum' and i + 1 < len(name_parts) and name_parts[i + 1] == '_':
-            result_parts.append(symbols.get(part, part))
-            i += 1  # Skip the underscore after 'sum'
-        
-        # Handle the 'sum_' exception
-        if part == 'txt' and i + 1 < len(name_parts) and name_parts[i + 1] == '_':
-            result_parts.append(symbols.get(part, part))
-            result_parts.append('{')
-            result_parts.append(name_parts[i+2])
-            result_parts.append('}')
-            i += 3  # Skip the underscore after 'txt'
-        
-        # # Handle the 'txt' exception
-        # if part == 'txt' and i + 2 < len(name_parts) and name_parts[i + 1] == '_' and name_parts[i + 2] == '_':
-        #     result_parts.append(symbols.get(part, part))  # Append the symbol for 'txt' or 'txt' itself
-        #     result_parts.append('{')  # Replace the first '_' with '{'
-        #     result_parts.append('}')  # Replace the second '_' with '}'
-        #     i += 1  # Skip the next two underscores and move to the part after them
-        #     print(result_parts)
-            
-
-        # Handle the '_strich' exception
-        elif part == '_' and i + 1 < len(name_parts) and name_parts[i + 1] == 'apos':
-            result_parts.append(symbols.get(name_parts[i + 1], name_parts[i + 1]))
-            i += 1  # Skip both underscore and 'strich'
-
-        # Replace regular parts using the dictionary
-        elif part in symbols:
-            result_parts.append(symbols[part])
-        
-        # Preserve numbers and non-matching underscores
-        else:
-            result_parts.append(part)
-        
-        i += 1
-
-    # Join all parts back together
-    name_replaced = ''.join(result_parts)
-    
-    # make a symbol out of it
-    name_replaced = latex(Symbol(name_replaced))
-
-    return name_replaced
-    
 def format_value(value, precision: float = 2):
     """Formats the value based on its type."""
     if isinstance(value, (int, float)):
@@ -129,7 +69,6 @@ def format_value(value, precision: float = 2):
         magnitude = np.round(value.magnitude, precision)
         if isinstance(magnitude, np.ndarray):
             # Handle numpy arrays of Pint quantities as matrices
-            magnitude_str = np.array2string(magnitude, separator=",")
             return f"{latex(Matrix(magnitude.tolist()))} \\ {latex(Symbol(str(value.units)))}"
         else:
             # Handle scalar Pint quantities
@@ -137,68 +76,84 @@ def format_value(value, precision: float = 2):
     else:
         return value
 
-def dict_to_markdown_table(dict:dict, symbols: dict= special_characters, precision:int=2, tablefmt: str='pipe'):
-    # Convert dictionary to list of lists with appropriate headers
-    formatted_data = [['$'+str(format_name(key))+'$', '$'+str(format_value(value, precision))+'$'] for key, value in dict.items()]
-    headers = ['Bezeichnung', 'Wert']
+def format_symbolic(expr: str, evaluate: bool = False) -> str:
+    """Formats the symbolic expression using sympy."""
+    try:
+        symbolic_expr = sympify(expr, evaluate=evaluate)
+        return latex(symbolic_expr)
+    except (SympifyError, TypeError, ValueError):
+        return expr
 
-    # Generate the Markdown table
-    markdown_table = tabulate(formatted_data, headers=headers, tablefmt=tablefmt)
+def substitute_numpy(expr: str) -> str:
+    replacements_numpy = {
+        'np.': '', 
+        'array': 'Matrix',
+    }
+    for key, value in replacements_numpy.items():
+        expr = expr.replace(key, value)
+    return expr
 
-    return markdown_table
+def substitute_pint(expr: str) -> str:
+    replacements_pint = {
+        '.m': '',
+        '.magnitude': '',
+    }
 
+    # Replace unit registry and unit conversions with a space
+    expr = re.sub(r'un\.\w+', ' ', expr)
+    expr = re.sub(r'ureg\.\w+', ' ', expr)
+    expr = re.sub(r'\.to\([^\)]+\)', '', expr)  # Remove unit conversions
 
+    # Apply other replacements
+    for key, value in replacements_pint.items():
+        expr = expr.replace(key, value)
+    
+    return expr
 
-def put_out(precision: int = 2, offset: int = 0, rows: int = 3, symbols: dict = special_characters, tablefmt:str = 'pipe') -> None:
-    """
-    Renders the variables and their values as LaTeX equations in a Jupyter notebook.
+def format_equation(line: str, rhs_value, symbolic: bool = True, evaluate: bool = False, precision: float = 2) -> str:
+    """Builds a Markdown equation from a parsed assignment line."""
+    # Split the line by the '=' sign
+    lhs, rhs = line.split('=')
+    
+    # Strip any leading/trailing whitespace
+    lhs = lhs.strip()
+    rhs = rhs.strip()
+    
+    # Substitute numpy and pint expressions
+    lhs = substitute_numpy(lhs)
+    lhs = substitute_pint(lhs)
+    rhs = substitute_numpy(rhs)
+    rhs = substitute_pint(rhs)
+    
+    # Format the left-hand side and right-hand side symbolically
+    lhs_symbolic = format_symbolic(lhs, evaluate=evaluate)
+    rhs_symbolic = format_symbolic(rhs, evaluate=evaluate)
+    
+    # Format the numerical value
+    rhs_value_formatted = format_value(rhs_value, precision)
+    
+    # Construct the Markdown equation
+    if symbolic:
+        equation = f"{lhs_symbolic} = {rhs_symbolic} = {rhs_value_formatted}"
+    else:
+        equation = f"{lhs_symbolic} = {rhs_value_formatted}"
+    
+    return equation
 
-    Args:
-        precision (int): The precision for numerical values. Defaults to 2.
-        offset (int): The number of previous cells to include for variable extraction. Defaults to 0.
-        rows (int): Maximum number of equations per row in horizontal display. Defaults to 3.
-        symbols (dict): Dictionary of symbols for LaTeX formatting.
+def build_equations(parsed_lines: list, symbolic: bool = True, evaluate: bool = False, precision: float = 2) -> list:
+    """Builds a list of Markdown equations from parsed assignment lines."""
+    equations = []
 
-    Returns:
-        None
-    """
-    # Use the new cell parser function
-    variables = parse_cell_variables(offset)
+    for line_type, line, rhs_value in parsed_lines:
+        if line_type == 'assignment':
+            equation = format_equation(line, rhs_value, symbolic, evaluate, precision)
+            equations.append(equation)
+    
+    return equations
 
+def put_out(precision: float = 2, symbolic: bool = True, offset: int = 0, rows: int = 1, evaluate: bool = False):
+    """Constructs and displays the final Markdown output."""
+    parsed_lines = cell_parser(offset)
+    equations = build_equations(parsed_lines, symbolic=symbolic, evaluate=evaluate, precision=precision)
 
-    formatted_vars = {}
-
-    for name, value in variables.items():
-        if type(value) == dict:
-            display(Markdown(dict_to_markdown_table(value, precision=precision, tablefmt=tablefmt)))
-            
-        else:
-            formatted_vars.update({format_name(name, symbols=symbols): format_value(value, precision=precision)})
-
-    # Horizontal display with aligned '=' signs
-    var_list = list(formatted_vars.items())
-
-    if len(var_list) == 0:
-        return 
-    elif len(var_list) < rows:
-        rows = len(var_list)
-
-    markdown_str = "$$\n\\begin{aligned}\n"
-    for i in range(0, len(var_list), rows):
-        row = var_list[i : i + rows]
-        row_str = " \\quad & ".join(
-            [f"{var_name} & = {value}" for var_name, value in row]
-        )
-        if len(row) < rows and rows != 1:
-            row_str += " \\quad & " * (rows - len(row)) + " \n"
-
-        markdown_str += row_str + " \\\\ \n"
-
-    if markdown_str.endswith(" \\\\ \n"):
-        markdown_str = markdown_str[:-4]
-    markdown_str += "\\end{aligned}\n$$"
-
-    display(Markdown(markdown_str))
-
-
-
+    print(equations)
