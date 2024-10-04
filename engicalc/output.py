@@ -129,7 +129,7 @@ def substitute_engicalc(expr: str) -> str:
     }
 
     # Replace unit registry and unit conversions with a space
-    expr = re.sub(r'ecc\.\w+', '', expr)
+    expr = re.sub(r'ecc.', '', expr)
 
     # Apply other replacements
     for key, value in replacements.items():
