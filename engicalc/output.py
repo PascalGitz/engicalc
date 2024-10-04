@@ -5,14 +5,6 @@ import numpy as np
 from IPython.display import display, Markdown
 import re
 
-import ast
-import io
-from contextlib import redirect_stdout
-
-import ast
-import io
-from contextlib import redirect_stdout
-
 def cell_parser(offset: int = 0) -> dict:
 
     ipy = get_ipython()
@@ -46,8 +38,6 @@ def cell_parser(offset: int = 0) -> dict:
 
     return variable_data
 
-
-
 def format_value(value, precision: float = 2):
     """Formats the value based on its type."""
     if isinstance(value, (int, float)):
@@ -79,81 +69,103 @@ def format_value(value, precision: float = 2):
 def format_symbolic(expr: str, evaluate: bool = False) -> str:
     """Formats the symbolic expression using sympy."""
     try:
+        # do the package substitution
+        expr = substitute_numpy(expr)
+        expr = substitute_pint(expr)
+        expr = substitute_engicalc(expr)
+        expr = substitute_special_characters(expr)
         symbolic_expr = sympify(expr, evaluate=evaluate)
         return latex(symbolic_expr)
     except (SympifyError, TypeError, ValueError):
         return expr
 
 def substitute_numpy(expr: str) -> str:
-    replacements_numpy = {
+    replacements = {
         'np.': '', 
         'array': 'Matrix',
     }
-    for key, value in replacements_numpy.items():
+    for key, value in replacements.items():
         expr = expr.replace(key, value)
     return expr
 
 def substitute_pint(expr: str) -> str:
-    replacements_pint = {
+    replacements = {
         '.m': '',
         '.magnitude': '',
     }
 
     # Replace unit registry and unit conversions with a space
-    expr = re.sub(r'un\.\w+', ' ', expr)
-    expr = re.sub(r'ureg\.\w+', ' ', expr)
+    expr = re.sub(r'[\*/]?\s*un\.\w+', ' ', expr)
+    expr = re.sub(r'[\*/]?\s*ureg\.\w+', ' ', expr)
     expr = re.sub(r'\.to\([^\)]+\)', '', expr)  # Remove unit conversions
 
     # Apply other replacements
-    for key, value in replacements_pint.items():
+    for key, value in replacements.items():
         expr = expr.replace(key, value)
     
     return expr
 
-def format_equation(line: str, rhs_value, symbolic: bool = True, evaluate: bool = False, precision: float = 2) -> str:
-    """Builds a Markdown equation from a parsed assignment line."""
-    # Split the line by the '=' sign
-    lhs, rhs = line.split('=')
+def substitute_special_characters(expr: str) -> str:
+    replacements = {
+
+    }
+
+    # Function to replace 'diam' with the symbol and append any suffix
+    def replace_diam(match):
+        return f"Symbol('\\oslash{match.group(1)}')"
+
+    # Use regex to find and replace 'diam' with the symbol and append any suffix
+    expr = re.sub(r'diam(_\w+)', replace_diam, expr)
+
+    # Apply other replacements
+    for key, value in replacements.items():
+        expr = expr.replace(key, value)
     
-    # Strip any leading/trailing whitespace
-    lhs = lhs.strip()
-    rhs = rhs.strip()
+    return expr
+
+def substitute_engicalc(expr: str) -> str:
+    replacements = {
+
+    }
+
+    # Replace unit registry and unit conversions with a space
+    expr = re.sub(r'ecc\.\w+', '', expr)
+
+    # Apply other replacements
+    for key, value in replacements.items():
+        expr = expr.replace(key, value)
     
-    # Substitute numpy and pint expressions
-    lhs = substitute_numpy(lhs)
-    lhs = substitute_pint(lhs)
-    rhs = substitute_numpy(rhs)
-    rhs = substitute_pint(rhs)
-    
-    # Format the left-hand side and right-hand side symbolically
-    lhs_symbolic = format_symbolic(lhs, evaluate=evaluate)
-    rhs_symbolic = format_symbolic(rhs, evaluate=evaluate)
-    
-    # Format the numerical value
-    rhs_value_formatted = format_value(rhs_value, precision)
-    
-    # Construct the Markdown equation
-    if symbolic:
-        equation = f"{lhs_symbolic} = {rhs_symbolic} = {rhs_value_formatted}"
-    else:
-        equation = f"{lhs_symbolic} = {rhs_value_formatted}"
-    
+    return expr
+
+def build_equation(assignment:dict, precision: float = 2, symbolic: bool=True, evaluate: bool=True):
+    var = format_symbolic(assignment['variable_name'])
+    expression = format_symbolic(assignment['expression'], evaluate=evaluate)    
+    result = format_value(assignment['result'], precision=precision)
+
+    if symbolic == True:
+        equation = f'{var}& = {expression} = {result}'
+    if symbolic == False:
+        equation = f'{var}& = {result}'
+
     return equation
 
-def build_equations(parsed_lines: list, symbolic: bool = True, evaluate: bool = False, precision: float = 2) -> list:
-    """Builds a list of Markdown equations from parsed assignment lines."""
-    equations = []
-
-    for line_type, line, rhs_value in parsed_lines:
-        if line_type == 'assignment':
-            equation = format_equation(line, rhs_value, symbolic, evaluate, precision)
-            equations.append(equation)
-    
-    return equations
-
-def put_out(precision: float = 2, symbolic: bool = True, offset: int = 0, rows: int = 1, evaluate: bool = False):
+def put_out(precision: float = 2, symbolic: bool = False, offset: int = 0, rows: int = 3, evaluate: bool = False):
     """Constructs and displays the final Markdown output."""
     parsed_lines = cell_parser(offset)
-    equations = build_equations(parsed_lines, symbolic=symbolic, evaluate=evaluate, precision=precision)
+    equations = [build_equation(eq, symbolic=symbolic, precision=precision, evaluate=evaluate) for eq in parsed_lines]
 
-    print(equations)
+    markdown_str = "$$\n\\begin{aligned}\n"
+    for i in range(0, len(equations), rows):
+        row = equations[i : i + rows]
+        row_str = " \\quad & ".join(
+            [f"{eq}" for eq in row]
+        )
+        if len(row) < rows and rows != 1:
+            row_str += " \\quad & " * (rows - len(row)) + " \n"
+
+        markdown_str += row_str + " \\\\ \n"
+
+    if markdown_str.endswith(" \\\\ \n"):
+        markdown_str = markdown_str[:-4]
+    markdown_str += "\\end{aligned}\n$$"
+    display(Markdown(markdown_str))
