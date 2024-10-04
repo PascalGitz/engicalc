@@ -95,9 +95,9 @@ def substitute_pint(expr: str) -> str:
     }
 
     # Replace unit registry and unit conversions with a space
-    expr = re.sub(r'[\*/]?\s*un\.\w+', ' ', expr)
-    expr = re.sub(r'[\*/]?\s*ureg\.\w+', ' ', expr)
     expr = re.sub(r'\.to\([^\)]+\)', '', expr)  # Remove unit conversions
+    expr = re.sub(r'[\*/]?\s*un\.\w+(\*\*\d+)?', '', expr)
+    expr = re.sub(r'[\*/]?\s*ureg\.\w+(\*\*\d+)?', '', expr)
 
     # Apply other replacements
     for key, value in replacements.items():
