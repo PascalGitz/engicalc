@@ -28,13 +28,21 @@ def cell_parser(offset: int = 0) -> dict:
 
             if variable_name in user_ns:
                 result = user_ns[variable_name]
-
-
                 variable_data.append({
                     'variable_name': variable_name,
                     'expression': expression,
                     'result': result
                 })
+
+        # Also capture single variable names without an assignment, that have been previously defined
+        elif line in user_ns:
+            variable_name = line
+            result = user_ns[variable_name]
+            variable_data.append({
+                'variable_name': variable_name,
+                'expression': variable_name,  # Expression is just the variable name
+                'result': result
+            })
 
     return variable_data
 
