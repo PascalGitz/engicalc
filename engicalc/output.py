@@ -5,6 +5,10 @@ import numpy as np
 from IPython.display import display, Markdown
 import re
 
+
+defined_variable_names = []
+
+
 def cell_parser(offset: int = 0) -> dict:
 
     ipy = get_ipython()
@@ -33,6 +37,7 @@ def cell_parser(offset: int = 0) -> dict:
                     'expression': expression,
                     'result': result
                 })
+                defined_variable_names.append(variable_name)
 
         # Also capture single variable names without an assignment, that have been previously defined
         elif line in user_ns:
@@ -115,15 +120,24 @@ def substitute_pint(expr: str) -> str:
 
 def substitute_special_characters(expr: str) -> str:
     replacements = {
+        'com': ',',
+        'diam': '\oslash',
+        'apos':"^'",
 
     }
 
-    # Function to replace 'diam' with the symbol and append any suffix
-    def replace_diam(match):
-        return f"Symbol('\\oslash{match.group(1)}')"
-
-    # Use regex to find and replace 'diam' with the symbol and append any suffix
-    expr = re.sub(r'diam(_\w+)', replace_diam, expr)
+    # Function to wrap all variable names in sympy.Symbol()
+    def replace_variables(match):
+        var_name = match.group(0)
+        if var_name in defined_variable_names:
+            # Return a sympy-compatible symbol expression
+            return f'Symbol("{var_name}")'
+        else:
+            return var_name
+        
+    # Use regex to find all valid variable names (e.g., alphanumeric and underscores)
+    # Modify this regex if you have specific naming conventions
+    expr = re.sub(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', replace_variables, expr)
 
     # Apply other replacements
     for key, value in replacements.items():
@@ -145,22 +159,24 @@ def substitute_engicalc(expr: str) -> str:
     
     return expr
 
-def build_equation(assignment:dict, precision: float = 2, symbolic: bool=True, evaluate: bool=True):
+def build_equation(assignment:dict, precision: float = 2, symbolic: bool=False, numeric: bool=True, evaluate: bool=True):
     var = format_symbolic(assignment['variable_name'])
     expression = format_symbolic(assignment['expression'], evaluate=evaluate)    
     result = format_value(assignment['result'], precision=precision)
 
-    if symbolic == True:
-        equation = f'{var}& = {expression} = {result}'
     if symbolic == False:
         equation = f'{var}& = {result}'
+    if numeric == False:
+        equation = f'{var}& = {expression}'
+    else:
+        equation = f'{var}& = {expression} = {result}'
 
     return equation
 
-def put_out(precision: float = 2, symbolic: bool = False, offset: int = 0, rows: int = 3, evaluate: bool = False):
+def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 3):
     """Constructs and displays the final Markdown output."""
     parsed_lines = cell_parser(offset)
-    equations = [build_equation(eq, symbolic=symbolic, precision=precision, evaluate=evaluate) for eq in parsed_lines]
+    equations = [build_equation(eq, symbolic=symbolic, numeric = numeric,  precision=precision, evaluate=evaluate) for eq in parsed_lines]
 
     markdown_str = "$$\n\\begin{aligned}\n"
     for i in range(0, len(equations), rows):
