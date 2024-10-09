@@ -1,29 +1,30 @@
-from IPython.display import display, Markdown, Latex
 import io
-import re
 from contextlib import redirect_stdout
-from sympy import Symbol, latex, Matrix
+from sympy import sympify, latex, SympifyError, Symbol, Matrix
 import numpy as np
-from tabulate import tabulate
+from IPython.display import display, Markdown
+import re
 
-# Define special characters and symbols
-special_characters = {
-    "diam": r"\oslash",
-    "apos": r"'",
-    "sum": r"\sum",
-    "comma": r",",
-}
 
-def parse_cell_variables(offset: int = 0) -> dict:
-    """
-    Parses the cell history to extract variable names and their corresponding values.
+global_expressions = []
 
-    Args:
-        offset (int): The number of previous cells to include for variable extraction. Defaults to 0.
+# Function to update or append the variable to global_expressions
+def update_global_expressions(variable_name, expression, result):
+    for entry in global_expressions:
+        if entry['variable_name'] == variable_name:
+            # Update existing entry with the new expression and result
+            entry['expression'] = expression
+            entry['result'] = result
+            return
+    # If variable_name is not found, append a new entry
+    global_expressions.append({
+        'variable_name': variable_name,
+        'expression': expression,
+        'result': result
+    })
 
-    Returns:
-        dict: A dictionary with variable names as keys and their corresponding values from the user namespace.
-    """
+def cell_parser(offset: int) -> dict:
+
     ipy = get_ipython()
     out = io.StringIO()
 
@@ -31,65 +32,55 @@ def parse_cell_variables(offset: int = 0) -> dict:
     with redirect_stdout(out):
         ipy.run_line_magic("history", f"{ipy.execution_count - offset}")
 
-    # Extract variable names from the captured output
-    lines = out.getvalue().replace(" ", "").split("\n")
-    variable_names = []
-    
-    for line in lines:
-        if "=" in line:
-            variable_names.append(line.split('=')[0])
-        else:
-            variable_names.append(line)
-    # Get the current global variables from the IPython user namespace
+    # Get the current variables and their values from the user namespace
     user_ns = ipy.user_ns
 
-    variables = {name: user_ns[name] for name in variable_names if name in user_ns}
+    # Extract variable names and expressions from the captured output
+    lines = out.getvalue().replace(" ", "").split("\n")
+    cell_variables = []
 
-    return variables
+    for line in lines:
+        # When a new variable is defined (with an assignment):
+        if "=" in line:
+            variable_name, expression = line.split('=', 1)
+
+            if variable_name in user_ns:
+                result = user_ns[variable_name]
+                cell_variables.append({
+                    'variable_name': variable_name,
+                    'expression': expression,
+                    'result': result
+                })
+
+                # Update or add the variable to global_expressions
+                update_global_expressions(variable_name, expression, result)
+
+        # When capturing a previously defined variable without an assignment:
+        elif line in user_ns:
+            variable_name = line
+            result = user_ns[variable_name]
+            
+            # Search for the matching entry in global_expressions
+            expression = variable_name  # Default to the variable name as the expression
+            for entry in global_expressions:
+                if entry['variable_name'] == variable_name:
+                    expression = entry['expression']
+                    break
+
+            # Add to cell_variables and update global_expressions
+            cell_variables.append({
+                'variable_name': variable_name,
+                'expression': expression,
+                'result': result
+            })
+
+            # Update or add the variable to global_expressions
+            update_global_expressions(variable_name, expression, result)
 
 
+    return cell_variables
 
-def format_name(name: str, symbols: dict = special_characters) -> str:
-    """Formats the input string with specific LaTeX replacements, handles underscores, and converts 'txt_' prefix to plain text."""
-    
-    # Regex to find words, underscores, and numbers separately
-    name_parts = re.findall(r'[a-zA-Z]+|_|\d+', name)
-    
-    result_parts = []
-    i = 0
-
-    while i < len(name_parts):
-        part = name_parts[i]
-        
-        # Handle the 'sum_' exception
-        if part == 'sum' and i + 1 < len(name_parts) and name_parts[i + 1] == '_':
-            result_parts.append(symbols.get(part, part))
-            i += 1  # Skip the underscore after 'sum'
-
-        # Handle the '_strich' exception
-        elif part == '_' and i + 1 < len(name_parts) and name_parts[i + 1] == 'apos':
-            result_parts.append(symbols.get(name_parts[i + 1], name_parts[i + 1]))
-            i += 1  # Skip both underscore and 'strich'
-
-        # Replace regular parts using the dictionary
-        elif part in symbols:
-            result_parts.append(symbols[part])
-        
-        # Preserve numbers and non-matching underscores
-        else:
-            result_parts.append(part)
-        
-        i += 1
-
-    # Join all parts back together
-    name_replaced = ''.join(result_parts)
-    
-    # make a symbol out of it
-    name_replaced = latex(Symbol(name_replaced))
-
-    return name_replaced
-    
-def format_value(value, precision: float = 2):
+def format_value(value, precision: float):
     """Formats the value based on its type."""
     if isinstance(value, (int, float)):
         return round(value, precision)
@@ -110,7 +101,6 @@ def format_value(value, precision: float = 2):
         magnitude = np.round(value.magnitude, precision)
         if isinstance(magnitude, np.ndarray):
             # Handle numpy arrays of Pint quantities as matrices
-            magnitude_str = np.array2string(magnitude, separator=",")
             return f"{latex(Matrix(magnitude.tolist()))} \\ {latex(Symbol(str(value.units)))}"
         else:
             # Handle scalar Pint quantities
@@ -118,57 +108,117 @@ def format_value(value, precision: float = 2):
     else:
         return value
 
-def dict_to_markdown_table(dict:dict, symbols: dict= special_characters, precision:int=2, tablefmt: str='pipe'):
-    # Convert dictionary to list of lists with appropriate headers
-    formatted_data = [[key, '$'+str(format_value(value, precision))+'$'] for key, value in dict.items()]
-    headers = ['Bezeichnung', 'Wert']
+def format_symbolic(expr: str, evaluate: bool) -> str:
+    """Formats the symbolic expression using sympy."""
+    try:
+        # do the package substitution
+        expr = substitute_numpy(expr)
+        expr = substitute_pint(expr)
+        expr = substitute_engicalc(expr)
+        expr = substitute_special_characters(expr)
+        symbolic_expr = sympify(expr, evaluate=evaluate)
+        return latex(symbolic_expr, mul_symbol = 'dot')
+    except (SympifyError, TypeError, ValueError):
+        return expr
 
-    # Generate the Markdown table
-    markdown_table = tabulate(formatted_data, headers=headers, tablefmt=tablefmt)
+def substitute_numpy(expr: str) -> str:
+    replacements = {
+        'np.': '', 
+        'array': 'Matrix',
+        '@': '*',
+    }
+    for key, value in replacements.items():
+        expr = expr.replace(key, value)
+    return expr
 
-    return markdown_table
+def substitute_pint(expr: str) -> str:
+    replacements = {
+        '.m': '',
+        '.magnitude': '',
+    }
+
+    # Replace unit registry and unit conversions with a space
+    expr = re.sub(r'\.to\([^\)]+\)', '', expr)  # Remove unit conversions
+    expr = re.sub(r'[\*/]?\s*un\.\w+(\*\*\d+)?', '', expr)
+    expr = re.sub(r'[\*/]?\s*ureg\.\w+(\*\*\d+)?', '', expr)
+
+    # Apply other replacements
+    for key, value in replacements.items():
+        expr = expr.replace(key, value)
+    
+    return expr
+
+def substitute_special_characters(expr: str) -> str:
+    replacements = {
+        'com': ',',
+        'diam': '\oslash',
+        '_apos':"prime",
+
+    }
 
 
+    # Function to wrap all variable names in sympy.Symbol()
+    def replace_variables(match):
+        var_name = match.group(0)
 
-def put_out(precision: int = 2, offset: int = 0, rows: int = 3, symbols: dict = special_characters, tablefmt:str = 'pipe') -> None:
-    """
-    Renders the variables and their values as LaTeX equations in a Jupyter notebook.
+        # Check if the var_name matches any variable_name in global_expressions
+        for entry in global_expressions:
+            if var_name == entry['variable_name']:
+                # Return a sympy-compatible symbol expression
+                return f'Symbol("{var_name}")'
 
-    Args:
-        precision (int): The precision for numerical values. Defaults to 2.
-        offset (int): The number of previous cells to include for variable extraction. Defaults to 0.
-        rows (int): Maximum number of equations per row in horizontal display. Defaults to 3.
-        symbols (dict): Dictionary of symbols for LaTeX formatting.
+        # If var_name is not found in global_expressions, return it as-is
+        return var_name
 
-    Returns:
-        None
-    """
-    # Use the new cell parser function
-    variables = parse_cell_variables(offset)
+        
+    # Use regex to find all valid variable names (e.g., alphanumeric and underscores)
+    # Modify this regex if you have specific naming conventions
+    expr = re.sub(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', replace_variables, expr)
 
+    # Apply other replacements
+    for key, value in replacements.items():
+        expr = expr.replace(key, value)
+    
+    return expr
 
-    formatted_vars = {}
+def substitute_engicalc(expr: str) -> str:
+    replacements = {
 
-    for name, value in variables.items():
-        if type(value) == dict:
-            display(Markdown(dict_to_markdown_table(value, precision=precision, tablefmt=tablefmt)))
-            
-        else:
-            formatted_vars.update({format_name(name, symbols=symbols): format_value(value, precision=precision)})
+    }
 
-    # Horizontal display with aligned '=' signs
-    var_list = list(formatted_vars.items())
+    # Replace unit registry and unit conversions with a space
+    expr = re.sub(r'ecc.', '', expr)
 
-    if len(var_list) == 0:
-        return 
-    elif len(var_list) < rows:
-        rows = len(var_list)
+    # Apply other replacements
+    for key, value in replacements.items():
+        expr = expr.replace(key, value)
+    
+    return expr
+
+def build_equation(assignment:dict, precision: float, symbolic: bool, numeric: bool, evaluate: bool):
+    var = format_symbolic(assignment['variable_name'], evaluate=evaluate)
+    expression = format_symbolic(assignment['expression'], evaluate=evaluate)    
+    result = format_value(assignment['result'], precision=precision)
+
+    if symbolic == False:
+        equation = f'{var}& = {result}'
+    if numeric == False:
+        equation = f'{var}& = {expression}'
+    if numeric ==True and symbolic == True:
+        equation = f'{var}& = {expression} = {result}'
+
+    return equation
+
+def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 3):
+    """Constructs and displays the final Markdown output."""
+    parsed_lines = cell_parser(offset)
+    equations = [build_equation(assignment = eq, symbolic=symbolic, numeric = numeric,  precision=precision, evaluate=evaluate) for eq in parsed_lines]
 
     markdown_str = "$$\n\\begin{aligned}\n"
-    for i in range(0, len(var_list), rows):
-        row = var_list[i : i + rows]
+    for i in range(0, len(equations), rows):
+        row = equations[i : i + rows]
         row_str = " \\quad & ".join(
-            [f"{var_name} & = {value}" for var_name, value in row]
+            [f"{eq}" for eq in row]
         )
         if len(row) < rows and rows != 1:
             row_str += " \\quad & " * (rows - len(row)) + " \n"
@@ -178,8 +228,4 @@ def put_out(precision: int = 2, offset: int = 0, rows: int = 3, symbols: dict = 
     if markdown_str.endswith(" \\\\ \n"):
         markdown_str = markdown_str[:-4]
     markdown_str += "\\end{aligned}\n$$"
-
     display(Markdown(markdown_str))
-
-
-

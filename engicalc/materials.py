@@ -1,37 +1,31 @@
 from engicalc.units import ureg, kg, t, mm, cm, dm, m, km, N, kN, MN, rad, deg, percent, s, MPa, los
-from engicalc.output import dict_to_markdown_table
+# from engicalc.output import dict_to_markdown_table
 from IPython.display import display, Markdown
 
 
 class Material:
-    def __init__(self, name: str, dichte: float, elastizitaetsmodul: float, poisson_ratio: float):
-        self.name = name
-        self.dichte = dichte
-        self.elastizitaetsmodul = elastizitaetsmodul
+    def __init__(self, name: str, dichte: float):
+        self.txt_name = name
+        self.rho = dichte
 
-    def get_material_properties(self):
-        return {
-            "Name": self.name,
-            "Dichte $\\rho$": self.dichte,
-            "Elastizitätsmodul": self.elastizitaetsmodul,
-        }
-
-    def __str__(self):
-        # return display(dict_to_markdown_table(self.get_material_properties()))
-        return 'test'
+    def get_properties(self):
+        return vars(self)
+    
+    # def _repr_markdown_(self):
+    #     return dict_to_markdown_table(self.get_properties())
         
 
 
 class Beton(Material):
     def __init__(self, NPK: str):
         beton_data = self.Betonsorte(NPK)
-        super().__init__(name=beton_data["Name"][0], dichte=None, elastizitaetsmodul=None, poisson_ratio=None)
-        self.druckfestigkeitsklasse = beton_data["Druckfestigkeitsklasse"][0]
-        self.expositionsklassen = beton_data["Expositionsklassen"]
-        self.nennwert_groesstkorn = beton_data["Nennwert Grösstkorn D_max"]
-        self.chloridgehalt = beton_data["Klasse des Chloridgehalts Cl"]
-        self.konsistenzklasse = beton_data["Konsistenzklasse"][0]
-        self.frost_tausalz_widerstand = beton_data["Frost-Tausalz-Widerstand"]
+        super().__init__(name=beton_data["Name"][0], dichte=2500*kg/m**3)
+        self.txt_Druckfestigkeitsklasse = beton_data["Druckfestigkeitsklasse"][0]
+        self.txt_Expositionsklassen = beton_data["Expositionsklassen"]
+        self.D_max = beton_data["Nennwert Grösstkorn D_max"]
+        self.C_l = beton_data["Klasse des Chloridgehalts Cl"]
+        self.txt_Konsistenzklasse = beton_data["Konsistenzklasse"][0]
+        self.txt_Frost_txt_Tausalz_txt_Widerstand = beton_data["Frost-Tausalz-Widerstand"]
         self.f_ck = beton_data["f_ck"]
         self.f_ctm = beton_data["f_ctm"]
 
@@ -206,27 +200,11 @@ class Beton(Material):
             }
             return NPK_L
         else:
-            raise ValueError('Betonsorte nicht erkannt. Inputmöglichkeiten: "A", "B", "C", "D", "E", "F", "G", "H", "I", "K", "L"')
-
-    def get_concrete_properties(self):
-        properties = self.get_material_properties()
-        properties.update({
-            "Druckfestigkeitsklasse": self.druckfestigkeitsklasse,
-            "Expositionsklassen": self.expositionsklassen,
-            "Nennwert Grösstkorn $D_{{max}}$": self.nennwert_groesstkorn,
-            "Klasse des Chloridgehalts $CL$": self.chloridgehalt,
-            "Konsistenzklasse": self.konsistenzklasse,
-            "Frost-Tausalz-Widerstand": self.frost_tausalz_widerstand,
-            "Charakteristische Würfeldruckfestigkeit $f_{{ck}}$": self.f_ck,
-            "Mittlere Zugfestigkeit $f_{{ctm}}$": self.f_ctm
-        })
-        return properties
-    
+            raise ValueError('Betonsorte nicht erkannt. Inputmöglichkeiten: "A", "B", "C", "D", "E", "F", "G", "H", "I", "K", "L"')    
     def __str__(self):
-        return f"Beton: {self.name} ({self.druckfestigkeitsklasse})"
+        return f"Beton: {self.txt_name} ({self.txt_Druckfestigkeitsklasse})"
 
-    def _repr_markdown_(self):
-        return dict_to_markdown_table(self.get_concrete_properties())
+
 
 
 
