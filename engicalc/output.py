@@ -9,7 +9,7 @@ import re
 defined_variable_names = []
 
 
-def cell_parser(offset: int = 0) -> dict:
+def cell_parser(offset: int) -> dict:
 
     ipy = get_ipython()
     out = io.StringIO()
@@ -51,7 +51,7 @@ def cell_parser(offset: int = 0) -> dict:
 
     return variable_data
 
-def format_value(value, precision: float = 2):
+def format_value(value, precision: float):
     """Formats the value based on its type."""
     if isinstance(value, (int, float)):
         return round(value, precision)
@@ -79,7 +79,7 @@ def format_value(value, precision: float = 2):
     else:
         return value
 
-def format_symbolic(expr: str, evaluate: bool = False) -> str:
+def format_symbolic(expr: str, evaluate: bool) -> str:
     """Formats the symbolic expression using sympy."""
     try:
         # do the package substitution
@@ -159,8 +159,8 @@ def substitute_engicalc(expr: str) -> str:
     
     return expr
 
-def build_equation(assignment:dict, precision: float = 2, symbolic: bool=False, numeric: bool=True, evaluate: bool=True):
-    var = format_symbolic(assignment['variable_name'])
+def build_equation(assignment:dict, precision: float, symbolic: bool, numeric: bool, evaluate: bool):
+    var = format_symbolic(assignment['variable_name'], evaluate=evaluate)
     expression = format_symbolic(assignment['expression'], evaluate=evaluate)    
     result = format_value(assignment['result'], precision=precision)
 
@@ -168,7 +168,7 @@ def build_equation(assignment:dict, precision: float = 2, symbolic: bool=False, 
         equation = f'{var}& = {result}'
     if numeric == False:
         equation = f'{var}& = {expression}'
-    else:
+    if numeric ==True and symbolic == True:
         equation = f'{var}& = {expression} = {result}'
 
     return equation
@@ -176,7 +176,7 @@ def build_equation(assignment:dict, precision: float = 2, symbolic: bool=False, 
 def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 3):
     """Constructs and displays the final Markdown output."""
     parsed_lines = cell_parser(offset)
-    equations = [build_equation(eq, symbolic=symbolic, numeric = numeric,  precision=precision, evaluate=evaluate) for eq in parsed_lines]
+    equations = [build_equation(assignment = eq, symbolic=symbolic, numeric = numeric,  precision=precision, evaluate=evaluate) for eq in parsed_lines]
 
     markdown_str = "$$\n\\begin{aligned}\n"
     for i in range(0, len(equations), rows):
