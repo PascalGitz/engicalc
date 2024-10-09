@@ -152,9 +152,10 @@ def substitute_special_characters(expr: str) -> str:
     replacements = {
         'com': ',',
         'diam': '\oslash',
-        'apos':"^'",
+        '_apos':"prime",
 
     }
+
 
     # Function to wrap all variable names in sympy.Symbol()
     def replace_variables(match):
