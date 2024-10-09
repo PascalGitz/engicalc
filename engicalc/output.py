@@ -6,8 +6,22 @@ from IPython.display import display, Markdown
 import re
 
 
-defined_variable_names = []
+global_expressions = []
 
+# Function to update or append the variable to global_expressions
+def update_global_expressions(variable_name, expression, result):
+    for entry in global_expressions:
+        if entry['variable_name'] == variable_name:
+            # Update existing entry with the new expression and result
+            entry['expression'] = expression
+            entry['result'] = result
+            return
+    # If variable_name is not found, append a new entry
+    global_expressions.append({
+        'variable_name': variable_name,
+        'expression': expression,
+        'result': result
+    })
 
 def cell_parser(offset: int) -> dict:
 
@@ -23,33 +37,48 @@ def cell_parser(offset: int) -> dict:
 
     # Extract variable names and expressions from the captured output
     lines = out.getvalue().replace(" ", "").split("\n")
-    variable_data = []
+    cell_variables = []
 
     for line in lines:
+        # When a new variable is defined (with an assignment):
         if "=" in line:
-            # Split by '=' to separate the variable name and the expression
             variable_name, expression = line.split('=', 1)
 
             if variable_name in user_ns:
                 result = user_ns[variable_name]
-                variable_data.append({
+                cell_variables.append({
                     'variable_name': variable_name,
                     'expression': expression,
                     'result': result
                 })
-                defined_variable_names.append(variable_name)
 
-        # Also capture single variable names without an assignment, that have been previously defined
+                # Update or add the variable to global_expressions
+                update_global_expressions(variable_name, expression, result)
+
+        # When capturing a previously defined variable without an assignment:
         elif line in user_ns:
             variable_name = line
             result = user_ns[variable_name]
-            variable_data.append({
+            
+            # Search for the matching entry in global_expressions
+            expression = variable_name  # Default to the variable name as the expression
+            for entry in global_expressions:
+                if entry['variable_name'] == variable_name:
+                    expression = entry['expression']
+                    break
+
+            # Add to cell_variables and update global_expressions
+            cell_variables.append({
                 'variable_name': variable_name,
-                'expression': variable_name,  # Expression is just the variable name
+                'expression': expression,
                 'result': result
             })
 
-    return variable_data
+            # Update or add the variable to global_expressions
+            update_global_expressions(variable_name, expression, result)
+
+
+    return cell_variables
 
 def format_value(value, precision: float):
     """Formats the value based on its type."""
@@ -96,6 +125,7 @@ def substitute_numpy(expr: str) -> str:
     replacements = {
         'np.': '', 
         'array': 'Matrix',
+        '@': '*',
     }
     for key, value in replacements.items():
         expr = expr.replace(key, value)
@@ -129,11 +159,16 @@ def substitute_special_characters(expr: str) -> str:
     # Function to wrap all variable names in sympy.Symbol()
     def replace_variables(match):
         var_name = match.group(0)
-        if var_name in defined_variable_names:
-            # Return a sympy-compatible symbol expression
-            return f'Symbol("{var_name}")'
-        else:
-            return var_name
+
+        # Check if the var_name matches any variable_name in global_expressions
+        for entry in global_expressions:
+            if var_name == entry['variable_name']:
+                # Return a sympy-compatible symbol expression
+                return f'Symbol("{var_name}")'
+
+        # If var_name is not found in global_expressions, return it as-is
+        return var_name
+
         
     # Use regex to find all valid variable names (e.g., alphanumeric and underscores)
     # Modify this regex if you have specific naming conventions
