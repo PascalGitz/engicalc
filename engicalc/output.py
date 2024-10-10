@@ -197,16 +197,20 @@ def substitute_engicalc(expr: str) -> str:
     return expr
 
 def build_equation(assignment:dict, precision: float, symbolic: bool, numeric: bool, evaluate: bool):
-    var = format_symbolic(assignment['variable_name'], evaluate=evaluate)
-    expression = format_symbolic(assignment['expression'], evaluate=evaluate)    
-    result = format_value(assignment['result'], precision=precision)
-
-    if symbolic == False:
+    try:
+        var = format_symbolic(assignment['variable_name'], evaluate=evaluate)   
+        expression = format_symbolic(assignment['expression'], evaluate=evaluate)       
+        result = format_value(assignment['result'], precision=precision)
+        if symbolic == False:
+            equation = f'{var}& = {result}'
+        if numeric == False:
+            equation = f'{var}& = {expression}'
+        if numeric ==True and symbolic == True:
+            equation = f'{var}& = {expression} = {result}'
+    except:
+        var = format_symbolic(assignment['variable_name'], evaluate=evaluate)   
+        result = format_value(assignment['result'], precision=precision)
         equation = f'{var}& = {result}'
-    if numeric == False:
-        equation = f'{var}& = {expression}'
-    if numeric ==True and symbolic == True:
-        equation = f'{var}& = {expression} = {result}'
 
     return equation
 
