@@ -747,7 +747,7 @@ def adm_stahlspannung_Rissbildung_SIA262_100a(fctm:float, Es:float, w_nom:float,
 *SIA 262:2013 Abschnitt 4.4.2.3.4 (100a)*
 
 Die zulässige Stahlspannung zur Begrenzung der nominellen Rissbreite zum Zeitpunkt der Rissbildung beträgt: 
-$$ \\sigma_{s,\\text{adm}} = \\sqrt{\\frac{9 \\cdot E_s \\: f_{cm} \\: w_{\\text{nom}}}{\\varnothing_s}} \\leq f_{sd} $$
+$$ \\sigma_{s,\\text{adm}} = \\sqrt{\\frac{9 \\cdot E_s \\: f_{ctm} \\: w_{\\text{nom}}}{\\varnothing_s}} \\leq f_{sd} $$
         """))
 
     return min(sqrt((9 * Es * fctm * w_nom) / diam_s),435*N/mm**2)
