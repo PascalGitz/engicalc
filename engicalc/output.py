@@ -227,6 +227,9 @@ def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False
     parsed_lines = cell_parser(offset)
     equations = [build_equation(assignment = eq, symbolic=symbolic, numeric = numeric,  precision=precision, evaluate=evaluate) for eq in parsed_lines]
 
+    # dropping duplicates by creating a dict
+    equations = list(dict.fromkeys(equations))
+
     markdown_str = "$$\n\\begin{aligned}\n"
     for i in range(0, len(equations), rows):
         row = equations[i : i + rows]
