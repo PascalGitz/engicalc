@@ -153,6 +153,7 @@ def substitute_special_characters(expr: str) -> str:
         'com': ',',
         'diam': '\oslash',
         '_apos':"prime",
+        'eps':'varepsilon', #convenience
 
     }
 
