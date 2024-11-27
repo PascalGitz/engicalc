@@ -117,7 +117,7 @@ def format_symbolic(expr: str, evaluate: bool) -> str:
         expr = substitute_engicalc(expr)
         expr = substitute_special_characters(expr)
         symbolic_expr = sympify(expr, evaluate=evaluate)
-        return latex(symbolic_expr, mul_symbol = 'dot')
+        return latex(symbolic_expr, mul_symbol = 'dot', order='none')
     except (SympifyError, TypeError, ValueError):
         return expr
 
