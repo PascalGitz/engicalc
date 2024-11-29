@@ -160,7 +160,7 @@ def substitute_pint(expr: str) -> str:
 def substitute_special_characters(expr: str) -> str:
     replacements = {
         'com': ',',
-        'diam': '\oslash',
+        'diam': r'\\oslash',
         '_apos':"prime",
         'eps':'varepsilon', #convenience
 
