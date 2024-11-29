@@ -113,11 +113,12 @@ def format_symbolic(expr: str, evaluate: bool) -> str:
     try:
         # do the package substitution
         expr = substitute_numpy(expr)
+        expr = substitute_math(expr)
         expr = substitute_pint(expr)
         expr = substitute_engicalc(expr)
         expr = substitute_special_characters(expr)
         symbolic_expr = sympify(expr, evaluate=evaluate)
-        return latex(symbolic_expr, mul_symbol = 'dot')
+        return latex(symbolic_expr, mul_symbol = 'dot', order='none')
     except (SympifyError, TypeError, ValueError):
         return expr
 
@@ -126,6 +127,14 @@ def substitute_numpy(expr: str) -> str:
         'np.': '', 
         'array': 'Matrix',
         '@': '*',
+    }
+    for key, value in replacements.items():
+        expr = expr.replace(key, value)
+    return expr
+
+def substitute_math(expr: str) -> str:
+    replacements = {
+        'math.': '', 
     }
     for key, value in replacements.items():
         expr = expr.replace(key, value)
@@ -153,6 +162,7 @@ def substitute_special_characters(expr: str) -> str:
         'com': ',',
         'diam': '\oslash',
         '_apos':"prime",
+        'eps':'varepsilon', #convenience
 
     }
 
@@ -196,19 +206,27 @@ def substitute_engicalc(expr: str) -> str:
     
     return expr
 
-def build_equation(assignment:dict, precision: float, symbolic: bool, numeric: bool, evaluate: bool):
+def build_equation(assignment: dict, precision: float, symbolic: bool, numeric: bool, evaluate: bool):
     try:
-        var = format_symbolic(assignment['variable_name'], evaluate=evaluate)   
-        expression = format_symbolic(assignment['expression'], evaluate=evaluate)       
+        var = format_symbolic(assignment['variable_name'], evaluate=evaluate)
+        expression = format_symbolic(assignment['expression'], evaluate=evaluate)
         result = format_value(assignment['result'], precision=precision)
-        if symbolic == False:
+
+        # Check if the expression can be converted to a float
+        try:
+            float(expression)
+            # If it can be converted, use only the numeric form
             equation = f'{var}& = {result}'
-        if numeric == False:
-            equation = f'{var}& = {expression}'
-        if numeric ==True and symbolic == True:
-            equation = f'{var}& = {expression} = {result}'
+        except ValueError:
+            # If it cannot be converted, handle symbolic, numeric, or both forms
+            if symbolic == False:
+                equation = f'{var}& = {result}'
+            if numeric == False:
+                equation = f'{var}& = {expression}'
+            if numeric == True and symbolic == True:
+                equation = f'{var}& = {expression} = {result}'
     except:
-        var = format_symbolic(assignment['variable_name'], evaluate=evaluate)   
+        var = format_symbolic(assignment['variable_name'], evaluate=evaluate)
         result = format_value(assignment['result'], precision=precision)
         equation = f'{var}& = {result}'
 
@@ -218,6 +236,9 @@ def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False
     """Constructs and displays the final Markdown output."""
     parsed_lines = cell_parser(offset)
     equations = [build_equation(assignment = eq, symbolic=symbolic, numeric = numeric,  precision=precision, evaluate=evaluate) for eq in parsed_lines]
+
+    # dropping duplicates by creating a dict
+    equations = list(dict.fromkeys(equations))
 
     markdown_str = "$$\n\\begin{aligned}\n"
     for i in range(0, len(equations), rows):
