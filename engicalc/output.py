@@ -113,6 +113,7 @@ def format_symbolic(expr: str, evaluate: bool) -> str:
     try:
         # do the package substitution
         expr = substitute_numpy(expr)
+        expr = substitute_math(expr)
         expr = substitute_pint(expr)
         expr = substitute_engicalc(expr)
         expr = substitute_special_characters(expr)
@@ -126,6 +127,14 @@ def substitute_numpy(expr: str) -> str:
         'np.': '', 
         'array': 'Matrix',
         '@': '*',
+    }
+    for key, value in replacements.items():
+        expr = expr.replace(key, value)
+    return expr
+
+def substitute_math(expr: str) -> str:
+    replacements = {
+        'math.': '', 
     }
     for key, value in replacements.items():
         expr = expr.replace(key, value)
