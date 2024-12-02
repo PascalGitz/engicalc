@@ -97,14 +97,19 @@ def format_value(value, precision: float):
         return formatted_list
     
     elif hasattr(value, "magnitude"):
+
+        # replace the degree sign
+        units = str(value.units)
+        units = units.replace('deg','°')
+
         # Handle Pint quantities
         magnitude = np.round(value.magnitude, precision)
         if isinstance(magnitude, np.ndarray):
             # Handle numpy arrays of Pint quantities as matrices
-            return f"{latex(Matrix(magnitude.tolist()))} \\ {latex(Symbol(str(value.units)))}"
+            return f"{latex(Matrix(magnitude.tolist()))} \\ {latex(Symbol(units))}"
         else:
             # Handle scalar Pint quantities
-            return f"{magnitude} \\ {latex(Symbol(str(value.units)))}"
+            return f"{magnitude} \\ {latex(Symbol(units))}"
     else:
         return value
 
@@ -144,6 +149,7 @@ def substitute_pint(expr: str) -> str:
     replacements = {
         '.m': '',
         '.magnitude': '',
+        '.deg':'test'
     }
 
     # Replace unit registry and unit conversions with a space
