@@ -4,12 +4,10 @@ from sympy import sympify, latex, SympifyError, Symbol, Matrix
 import numpy as np
 from IPython.display import display, Markdown
 import re
-from engicalc.units import ureg
+
 
 global_expressions = []
 
-def test():
-    print('test')
 # Function to update or append the variable to global_expressions
 def update_global_expressions(variable_name, expression, result):
     for entry in global_expressions:
@@ -84,9 +82,6 @@ def cell_parser(offset: int) -> dict:
 
 def format_value(value, precision: float):
     """Formats the value based on its type."""
-    # change the unit format to latex
-    ureg.formatter.default_format = "~L"
-
     if isinstance(value, (int, float)):
         return round(value, precision)
     
@@ -251,8 +246,6 @@ def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False
     # dropping duplicates by creating a dict
     equations = list(dict.fromkeys(equations))
 
-    # changes the unit format to latex
-
     markdown_str = "$$\n\\begin{aligned}\n"
     for i in range(0, len(equations), rows):
         row = equations[i : i + rows]
@@ -268,6 +261,3 @@ def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False
         markdown_str = markdown_str[:-4]
     markdown_str += "\\end{aligned}\n$$"
     display(Markdown(markdown_str))
-    
-    # changes the unit format back to pretty
-    ureg.formatter.default_format = "~P"

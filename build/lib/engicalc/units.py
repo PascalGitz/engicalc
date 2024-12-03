@@ -6,7 +6,7 @@ from pint import UnitRegistry
 
 # Erstellen eines UnitRegistry-Objekts
 ureg = UnitRegistry()
-ureg.formatter.default_format = "~P"
+ureg.formatter.default_format = "~L"
 
 ureg.define('Nm = newton * meter')
 ureg.define('kNm = kilonewton * meter')
