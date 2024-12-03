@@ -8,8 +8,6 @@ from engicalc.units import ureg
 
 global_expressions = []
 
-def test():
-    print('test')
 # Function to update or append the variable to global_expressions
 def update_global_expressions(variable_name, expression, result):
     for entry in global_expressions:
@@ -268,6 +266,6 @@ def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False
         markdown_str = markdown_str[:-4]
     markdown_str += "\\end{aligned}\n$$"
     display(Markdown(markdown_str))
-    
+
     # changes the unit format back to pretty
     ureg.formatter.default_format = "~P"
