@@ -35,5 +35,7 @@ percent = ureg.percent
 permille = ureg.permille
 s = ureg.s
 
+degC = ureg.degC
+
 MPa = ureg.MPa
 los = ureg.dimensionless
