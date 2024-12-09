@@ -36,6 +36,7 @@ permille = ureg.permille
 s = ureg.s
 
 degC = ureg.degC
+K = ureg.kelvin
 
 MPa = ureg.MPa
 los = ureg.dimensionless
