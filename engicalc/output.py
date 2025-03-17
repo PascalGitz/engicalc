@@ -241,7 +241,7 @@ def build_equation(assignment: dict, precision: float, symbolic: bool, numeric: 
 
     return equation
 
-def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 3):
+def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 1):
     """Constructs and displays the final Markdown output."""
     parsed_lines = cell_parser(offset)
     equations = [build_equation(assignment = eq, symbolic=symbolic, numeric = numeric,  precision=precision, evaluate=evaluate) for eq in parsed_lines]
