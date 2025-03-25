@@ -221,19 +221,22 @@ def build_equation(assignment: dict, precision: float, symbolic: bool, numeric: 
         expression = format_symbolic(assignment['expression'], evaluate=evaluate)
         result = format_value(assignment['result'], precision=precision)
 
-        # Check if the expression can be converted to a float
-        try:
-            float(expression)
-            # If it can be converted, use only the numeric form
+        if var == expression:
             equation = f'{var}& = {result}'
-        except ValueError:
-            # If it cannot be converted, handle symbolic, numeric, or both forms
-            if symbolic == False:
+        else:
+            # Check if the expression can be converted to a float
+            try:
+                float(expression)
+                # If it can be converted, use only the numeric form
                 equation = f'{var}& = {result}'
-            if numeric == False:
-                equation = f'{var}& = {expression}'
-            if numeric == True and symbolic == True:
-                equation = f'{var}& = {expression} = {result}'
+            except ValueError:
+                # If it cannot be converted, handle symbolic, numeric, or both forms
+                if symbolic == False:
+                    equation = f'{var}& = {result}'
+                if numeric == False:
+                    equation = f'{var}& = {expression}'
+                if numeric == True and symbolic == True:
+                    equation = f'{var}& = {expression} = {result}'
     except:
         var = format_symbolic(assignment['variable_name'], evaluate=evaluate)
         result = format_value(assignment['result'], precision=precision)
