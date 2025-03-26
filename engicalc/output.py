@@ -251,11 +251,14 @@ def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False
     # dropping duplicates by creating a dict
     equations = list(dict.fromkeys(equations))
 
+    # 
+    rows = min(rows,len(equations))
+
 
     # changes the unit format to latex
 
     markdown_str = "$$\n\\begin{aligned}\n"
-    for i in range(0, len(equations), min(rows, len(equations))):
+    for i in range(0, len(equations), rows):
         row = equations[i : i + rows]
         row_str = " \\quad & ".join(
             [f"{eq}" for eq in row]
