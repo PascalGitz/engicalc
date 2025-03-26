@@ -244,18 +244,18 @@ def build_equation(assignment: dict, precision: float, symbolic: bool, numeric: 
 
     return equation
 
-def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 1):
+def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 3):
     """Constructs and displays the final Markdown output."""
     parsed_lines = cell_parser(offset)
     equations = [build_equation(assignment = eq, symbolic=symbolic, numeric = numeric,  precision=precision, evaluate=evaluate) for eq in parsed_lines]
-
     # dropping duplicates by creating a dict
     equations = list(dict.fromkeys(equations))
+
 
     # changes the unit format to latex
 
     markdown_str = "$$\n\\begin{aligned}\n"
-    for i in range(0, len(equations), rows):
+    for i in range(0, len(equations), min(rows, len(equations))):
         row = equations[i : i + rows]
         row_str = " \\quad & ".join(
             [f"{eq}" for eq in row]
