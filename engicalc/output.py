@@ -244,7 +244,7 @@ def build_equation(assignment: dict, precision: float, symbolic: bool, numeric: 
 
     return equation
 
-def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 3):
+def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 3, color='black'):
     """Constructs and displays the final Markdown output."""
     parsed_lines = cell_parser(offset)
     equations = [build_equation(assignment = eq, symbolic=symbolic, numeric = numeric,  precision=precision, evaluate=evaluate) for eq in parsed_lines]
@@ -257,21 +257,26 @@ def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False
 
     # changes the unit format to latex
 
-    markdown_str = "$$\n\\begin{aligned}\n"
+    markdown_str = "$$\\begin{aligned}"
     for i in range(0, len(equations), rows):
         row = equations[i : i + rows]
         row_str = " \\quad & ".join(
             [f"{eq}" for eq in row]
         )
         if len(row) < rows and rows != 1:
-            row_str += " \\quad & " * (rows - len(row)) + " \n"
+            row_str += " \\quad & " * (rows - len(row)) 
 
-        markdown_str += row_str + " \\\\ \n"
+        markdown_str += row_str + " \\\\ "
 
-    if markdown_str.endswith(" \\\\ \n"):
+    if markdown_str.endswith(" \\\\"):
         markdown_str = markdown_str[:-4]
-    markdown_str += "\\end{aligned}\n$$"
-    display(Markdown(markdown_str))
+    markdown_str += "\\end{aligned}$$"
+
+    ## Adding the color
+
+    colored_markdown_str = f"[{markdown_str}]{{style=\"color:{color};\"}}"
+
+    display(Markdown(colored_markdown_str))
 
     # changes the unit format back to pretty
     ureg.formatter.default_format = "~P"
