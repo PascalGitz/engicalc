@@ -4,9 +4,10 @@ from IPython.display import display, Markdown
 
 
 class Material:
-    def __init__(self, name: str, dichte: float):
+    def __init__(self, name: str, dichte: float, E_Modul:float):
         self.txt_name = name
         self.rho = dichte
+        self.E = E_Modul
 
     def get_properties(self):
         return vars(self)
@@ -19,7 +20,7 @@ class Material:
 class Beton(Material):
     def __init__(self, NPK: str):
         beton_data = self.Betonsorte(NPK)
-        super().__init__(name=beton_data["Name"][0], dichte=2500*kg/m**3)
+        super().__init__(name=beton_data["Name"][0], dichte=2500*kg/m**3, E_Modul=30000*N/mm**2)
         self.txt_Druckfestigkeitsklasse = beton_data["Druckfestigkeitsklasse"][0]
         self.txt_Expositionsklassen = beton_data["Expositionsklassen"]
         self.D_max = beton_data["Nennwert Grösstkorn D_max"]
@@ -209,7 +210,7 @@ class Beton(Material):
 class Stahl(Material):
     def __init__(self, Stahlqualität: str):
         stahl_data = self.Stahlsorte(Stahlqualität)
-        super().__init__(name=stahl_data["Name"][0], dichte=7850*kg/m**3)
+        super().__init__(name=stahl_data["Name"][0], dichte=7850*kg/m**3, E_Modul=210000*N/mm**2)
         self.f_yk = stahl_data["f_yk"]
         self.tau_yk = stahl_data["tau_yk"]
         self.f_uk = stahl_data["f_uk"]

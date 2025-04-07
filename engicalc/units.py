@@ -37,3 +37,5 @@ s = ureg.s
 
 MPa = ureg.MPa
 los = ureg.dimensionless
+
+K = ureg.degK
