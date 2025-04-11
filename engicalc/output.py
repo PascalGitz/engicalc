@@ -135,6 +135,7 @@ def substitute_numpy(expr: str) -> str:
         'np.': '', 
         'array': 'Matrix',
         '@': '*',
+        'abs': 'Abs', #in sympy absolute value is defined with Abs
     }
     for key, value in replacements.items():
         expr = expr.replace(key, value)
@@ -244,7 +245,7 @@ def build_equation(assignment: dict, precision: float, symbolic: bool, numeric: 
 
     return equation
 
-def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 3, color='black'):
+def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 3, style=None):
     """Constructs and displays the final Markdown output."""
     parsed_lines = cell_parser(offset)
     equations = [build_equation(assignment = eq, symbolic=symbolic, numeric = numeric,  precision=precision, evaluate=evaluate) for eq in parsed_lines]
@@ -274,9 +275,15 @@ def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False
 
     ## Adding the color
 
-    colored_markdown_str = f"[{markdown_str}]{{style=\"color:{color};\"}}"
 
-    display(Markdown(colored_markdown_str))
+    colored_markdown_str = f"[{markdown_str}]{{custom-style=\"{style};\"}}"
+
+    if style!=None:
+        colored_markdown_str = f"::: {{custom-style=\"{style}\"}}\n{markdown_str}\n:::"
+        display(Markdown(colored_markdown_str))
+
+    else:
+        display(Markdown(markdown_str))
 
     # changes the unit format back to pretty
     ureg.formatter.default_format = "~P"
