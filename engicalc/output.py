@@ -135,6 +135,7 @@ def substitute_numpy(expr: str) -> str:
         'np.': '', 
         'array': 'Matrix',
         '@': '*',
+        'abs': 'Abs', #in sympy absolute value is defined with Abs
     }
     for key, value in replacements.items():
         expr = expr.replace(key, value)
@@ -221,19 +222,22 @@ def build_equation(assignment: dict, precision: float, symbolic: bool, numeric: 
         expression = format_symbolic(assignment['expression'], evaluate=evaluate)
         result = format_value(assignment['result'], precision=precision)
 
-        # Check if the expression can be converted to a float
-        try:
-            float(expression)
-            # If it can be converted, use only the numeric form
+        if var == expression:
             equation = f'{var}& = {result}'
-        except ValueError:
-            # If it cannot be converted, handle symbolic, numeric, or both forms
-            if symbolic == False:
+        else:
+            # Check if the expression can be converted to a float
+            try:
+                float(expression)
+                # If it can be converted, use only the numeric form
                 equation = f'{var}& = {result}'
-            if numeric == False:
-                equation = f'{var}& = {expression}'
-            if numeric == True and symbolic == True:
-                equation = f'{var}& = {expression} = {result}'
+            except ValueError:
+                # If it cannot be converted, handle symbolic, numeric, or both forms
+                if symbolic == False:
+                    equation = f'{var}& = {result}'
+                if numeric == False:
+                    equation = f'{var}& = {expression}'
+                if numeric == True and symbolic == True:
+                    equation = f'{var}& = {expression} = {result}'
     except:
         var = format_symbolic(assignment['variable_name'], evaluate=evaluate)
         result = format_value(assignment['result'], precision=precision)
@@ -241,31 +245,46 @@ def build_equation(assignment: dict, precision: float, symbolic: bool, numeric: 
 
     return equation
 
-def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 3):
+def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 3, style=None):
     """Constructs and displays the final Markdown output."""
     parsed_lines = cell_parser(offset)
     equations = [build_equation(assignment = eq, symbolic=symbolic, numeric = numeric,  precision=precision, evaluate=evaluate) for eq in parsed_lines]
-
     # dropping duplicates by creating a dict
     equations = list(dict.fromkeys(equations))
 
+    # 
+    rows = min(rows,len(equations))
+
+
     # changes the unit format to latex
 
-    markdown_str = "$$\n\\begin{aligned}\n"
+    markdown_str = "$$\\begin{aligned}"
     for i in range(0, len(equations), rows):
         row = equations[i : i + rows]
         row_str = " \\quad & ".join(
             [f"{eq}" for eq in row]
         )
         if len(row) < rows and rows != 1:
-            row_str += " \\quad & " * (rows - len(row)) + " \n"
+            row_str += " \\quad & " * (rows - len(row)) 
 
-        markdown_str += row_str + " \\\\ \n"
+        markdown_str += row_str
 
-    if markdown_str.endswith(" \\\\ \n"):
-        markdown_str = markdown_str[:-4]
-    markdown_str += "\\end{aligned}\n$$"
-    display(Markdown(markdown_str))
+        if i + rows < len(equations):
+            markdown_str += " \\\\ "
+
+    markdown_str += "\\end{aligned}$$"
+
+    ## Adding the color
+
+
+    colored_markdown_str = f"[{markdown_str}]{{custom-style=\"{style};\"}}"
+
+    if style!=None:
+        colored_markdown_str = f"::: {{custom-style=\"{style}\"}}\n{markdown_str}\n:::"
+        display(Markdown(colored_markdown_str))
+
+    else:
+        display(Markdown(markdown_str))
 
     # changes the unit format back to pretty
     ureg.formatter.default_format = "~P"
