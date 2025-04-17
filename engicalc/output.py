@@ -267,10 +267,11 @@ def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False
         if len(row) < rows and rows != 1:
             row_str += " \\quad & " * (rows - len(row)) 
 
-        markdown_str += row_str + " \\\\ "
+        markdown_str += row_str
 
-    if markdown_str.endswith(" \\\\"):
-        markdown_str = markdown_str[:-4]
+        if i + rows < len(equations):
+            markdown_str += " \\\\ "
+
     markdown_str += "\\end{aligned}$$"
 
     ## Adding the color
