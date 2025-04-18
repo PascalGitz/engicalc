@@ -46,8 +46,15 @@ def create_project():
     os.makedirs(abbildungen_path, exist_ok=True)
     os.makedirs(setup_path, exist_ok=True)
 
-    # Erstelle die .code-workspace Datei im Python-Ordner
+    # Workspace File Name
     workspace_file = os.path.join(python_path, f"{project_name}_{username}_workspace.code-workspace")
+
+    # Prüfen, ob Workspace-Datei bereits existiert
+    if os.path.exists(workspace_file):
+        show_window_warning("Das Projekt existiert bereits! Workspace-Datei ist schon vorhanden.")
+        return
+
+    # Erstelle die .code-workspace Datei im Python-Ordner
     workspace_content = f'''{{
     "folders": [
         {{
@@ -78,6 +85,7 @@ def create_project():
     # Notebook-Vorlage kopieren
     template_notebook = './files/template.ipynb'  # Pfad zur Vorlage
     target_notebook = os.path.join(files_path, f'{project_name}.ipynb')  # Zielname anpassen
+    message = ""
 
     try:
         shutil.copyfile(template_notebook, target_notebook)
@@ -102,7 +110,8 @@ def create_project():
     except FileNotFoundError:
         message = "Word-Vorlage nicht gefunden. Stelle sicher, dass 'files/Vorlage_Python_Export.docx' existiert."
 
-    show_window_warning(message)
+    if message != "":
+        show_window_warning(message)
 
     # Deaktiviere den Knopf nach dem Erstellen, damit nicht versehentlich eine 2. Ordnerstruktur erstellt wird.
     create_button.config(state='disabled')
