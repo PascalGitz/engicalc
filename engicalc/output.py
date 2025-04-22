@@ -173,6 +173,7 @@ def substitute_special_characters(expr: str) -> str:
         'diam': r'\\oslash',
         '_apos':"prime",
         'eps':'varepsilon', #convenience
+        'infty': r'\\infty',
 
     }
 
