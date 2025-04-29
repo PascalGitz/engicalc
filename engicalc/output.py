@@ -246,7 +246,7 @@ def build_equation(assignment: dict, precision: float, symbolic: bool, numeric: 
 
     return equation
 
-def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 3, style=None):
+def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 3, style=None, debug=False):
     """Constructs and displays the final Markdown output."""
     parsed_lines = cell_parser(offset)
     equations = [build_equation(assignment = eq, symbolic=symbolic, numeric = numeric,  precision=precision, evaluate=evaluate) for eq in parsed_lines]
@@ -284,8 +284,14 @@ def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False
         colored_markdown_str = f"::: {{custom-style=\"{style}\"}}\n{markdown_str}\n:::"
         display(Markdown(colored_markdown_str))
 
+        if debug:
+            print(markdown_str)
+
     else:
         display(Markdown(markdown_str))
+
+        if debug:
+            print(markdown_str)
 
     # changes the unit format back to pretty
     ureg.formatter.default_format = "~P"
