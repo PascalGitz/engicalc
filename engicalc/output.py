@@ -253,9 +253,9 @@ def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False
     # dropping duplicates by creating a dict
     equations = list(dict.fromkeys(equations))
 
-    if debug:
-        for equation in equations:
-            print(equation.replace('&', ''))
+    # if debug:
+    #     for equation in equations:
+    #         print(equation.replace('&', ''))
     # 
     rows = min(rows,len(equations))
 
@@ -286,9 +286,13 @@ def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False
     if style!=None:
         colored_markdown_str = f"::: {{custom-style=\"{style}\"}}\n{markdown_str}\n:::"
         display(Markdown(colored_markdown_str))
+        if debug:
+            print(markdown_str)
 
     else:
         display(Markdown(markdown_str))
+        if debug:
+            print(markdown_str)
 
 
     # changes the unit format back to pretty
