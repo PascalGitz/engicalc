@@ -40,3 +40,5 @@ K = ureg.kelvin
 
 MPa = ureg.MPa
 los = ureg.dimensionless
+
+K = ureg.degK

@@ -4,9 +4,10 @@ from IPython.display import display, Markdown
 
 
 class Material:
-    def __init__(self, name: str, dichte: float):
+    def __init__(self, name: str, dichte: float, E_Modul:float):
         self.txt_name = name
         self.rho = dichte
+        self.E = E_Modul
 
     def get_properties(self):
         return vars(self)
@@ -19,7 +20,7 @@ class Material:
 class Beton(Material):
     def __init__(self, NPK: str):
         beton_data = self.Betonsorte(NPK)
-        super().__init__(name=beton_data["Name"][0], dichte=2500*kg/m**3)
+        super().__init__(name=beton_data["Name"][0], dichte=2500*kg/m**3, E_Modul=30000*N/mm**2)
         self.txt_Druckfestigkeitsklasse = beton_data["Druckfestigkeitsklasse"][0]
         self.txt_Expositionsklassen = beton_data["Expositionsklassen"]
         self.D_max = beton_data["Nennwert Grösstkorn D_max"]
@@ -52,7 +53,7 @@ class Beton(Material):
 
         Beispiele:
         --------  
-        >>> kriechdehnung_SIA262_12("G")
+        >>> Beton("G")
         {'Name': ('NPK G',), 'Druckfestigkeitsklasse': ('C30/37',), 'Expositionsklassen': ('XC4', 'XD3', 'XF4'), 'Nennwert Grösstkorn D_max': (32,), 'Klasse des Chloridgehalts Cl': (0.1,), 'Konsistenzklasse': ('C3',), 'Frost-Tausalz-Widerstand': ('hoch',), 'f_ck': 30}
         """
 
@@ -206,6 +207,64 @@ class Beton(Material):
 
 
 
+class Stahl(Material):
+    def __init__(self, Stahlqualität: str):
+        stahl_data = self.Stahlsorte(Stahlqualität)
+        super().__init__(name=stahl_data["Name"][0], dichte=7850*kg/m**3, E_Modul=210000*N/mm**2)
+        self.f_yk = stahl_data["f_yk"]
+        self.tau_yk = stahl_data["tau_yk"]
+        self.f_uk = stahl_data["f_uk"]
+        self.Blechstärke = stahl_data["Blechstärke"]
 
 
 
+    @staticmethod
+    def Stahlsorte(Stahlqualität:str):
+        """
+        Diese Funktion gibt alle relevanten Stahlparameter aus.
+        SIA 263:2013
+        
+        Parameter:
+        ----------
+        Stahlqualität : string
+        Blechstärke : to be defined
+                
+        Rückgabe:
+        -------
+        Dictionary
+            Alle Angaben zum Stahl.
+        
+        Hinweise:
+        -----
+        Stahlsorten nach SIA 263:2013
+        Festigkeiten gemäss SIA 263(2013) 3.2.2.3
+    
+
+        Beispiele:
+        --------  
+        >>> Stahl("S355")
+        {'Name': ('S235',), 'f_yk': 355, 'tau_yk': 205, 'f_uk': 510, 'Blechstärke': 't<40mm'}
+        """
+
+        if Stahlqualität == "S235":
+            S235 = {
+                "Name": ("S 235",),
+                "f_yk": 235*N/mm**2,
+                "tau_yk": 135*N/mm**2,
+                "f_uk": 360*N/mm**2,
+                "Blechstärke": "t<40mm"
+             }
+            return S235
+        elif Stahlqualität == "S355":
+            S355 = {
+                "Name": ("S 355",),
+                "f_yk": 355*N/mm**2,
+                "tau_yk": 205*N/mm**2,
+                "f_uk": 510*N/mm**2,
+                "Blechstärke": "t<40mm"
+            }
+            return S355
+        else:
+            raise ValueError('Stahlsorte nicht erkannt. Inputmöglichkeiten: "S235", "S355"')    
+    def __str__(self):
+        return f"Stahl: {self.txt_name}\\,(\\,für\\,{self.Blechstärke})"
