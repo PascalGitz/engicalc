@@ -4,8 +4,39 @@ from sympy import sympify, latex, SympifyError, Symbol, Matrix
 import numpy as np
 from IPython.display import display, Markdown
 import re
-from engicalc.units import ureg
+from engicalc.units import ureg, units
 
+
+# Units substitution
+replacements_units = {}
+for unit in units.items():
+    formatted_unit = f"\\\mathrm{{{str(unit[1])}}}"
+    replacements_units[unit[0]] = f'Symbol("{formatted_unit.replace("deg", "°")}")'
+
+
+# general replacements
+replacements = {
+        # numpy
+        'np.': '', 
+        'array': 'Matrix',
+        '@': '*',
+        'abs': 'Abs', #in sympy absolute value is defined with Abs
+        
+
+        #pint
+        '.m': '',
+        '.magnitude': '',
+}
+
+# special characters.
+replacements_specials ={
+        #special characters
+        'diam': r'\\oslash',
+        'eps':'varepsilon', #convenience
+        'infty': r'\\infty',
+}
+
+# Global storage
 global_expressions = []
 
 # Function to update or append the variable to global_expressions
@@ -120,63 +151,48 @@ def format_symbolic(expr: str, evaluate: bool) -> str:
     """Formats the symbolic expression using sympy."""
     try:
         # do the package substitution
-        expr = substitute_numpy(expr)
-        expr = substitute_math(expr)
+        ## general replacements
+        expr = substitute_replacements(expr)
+        ## specialcase with .to method
         expr = substitute_pint(expr)
-        expr = substitute_engicalc(expr)
+        ## specialcase with special characters using Symbol
         expr = substitute_special_characters(expr)
+        ## Eventually replace the units
+        expr = substitute_units(expr)
+
         symbolic_expr = sympify(expr, evaluate=evaluate)
         return latex(symbolic_expr, mul_symbol = 'dot', order='none')
     except (SympifyError, TypeError, ValueError):
         return expr
 
-def substitute_numpy(expr: str) -> str:
-    replacements = {
-        'np.': '', 
-        'array': 'Matrix',
-        '@': '*',
-        'abs': 'Abs', #in sympy absolute value is defined with Abs
-    }
-    for key, value in replacements.items():
-        expr = expr.replace(key, value)
-    return expr
+def substitute_replacements(expr: str) -> str:
 
-def substitute_math(expr: str) -> str:
-    replacements = {
-        'math.': '', 
-    }
     for key, value in replacements.items():
         expr = expr.replace(key, value)
     return expr
 
 def substitute_pint(expr: str) -> str:
-    replacements = {
-        '.m': '',
-        '.magnitude': '',
-        '.deg':'test'
-    }
-
+   
     # Replace unit registry and unit conversions with a space
     expr = re.sub(r'\.to\([^\)]+\)', '', expr)  # Remove unit conversions
-    expr = re.sub(r'[\*/]?\s*un\.\w+(\*\*\d+)?', '', expr)
-    expr = re.sub(r'[\*/]?\s*ureg\.\w+(\*\*\d+)?', '', expr)
-
-    # Apply other replacements
-    for key, value in replacements.items():
-        expr = expr.replace(key, value)
-    
+        
     return expr
 
+def substitute_units(expr: str) -> str:
+    """Replace exact unit names with their corresponding SymPy symbols."""
+    
+    # Sort unit names by length (longest first) to prevent substring conflicts
+    sorted_keys = sorted(replacements_units.keys(), key=len, reverse=True)
+
+    # Ensure exact matches using word boundaries
+    for key in sorted_keys:
+        expr = re.sub(rf'\b{key}\b', replacements_units[key], expr)  # Exact match replacement
+
+    return expr
+
+
 def substitute_special_characters(expr: str) -> str:
-    replacements = {
-        'com': ',',
-        'diam': r'\\oslash',
-        '_apos':"prime",
-        'eps':'varepsilon', #convenience
-        'infty': r'\\infty',
-
-    }
-
+    
 
     # Function to wrap all variable names in sympy.Symbol()
     def replace_variables(match):
@@ -195,27 +211,10 @@ def substitute_special_characters(expr: str) -> str:
     # Use regex to find all valid variable names (e.g., alphanumeric and underscores)
     # Modify this regex if you have specific naming conventions
     expr = re.sub(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', replace_variables, expr)
-
-    # Apply other replacements
-    for key, value in replacements.items():
+    for key, value in replacements_specials.items():
         expr = expr.replace(key, value)
-    
     return expr
 
-def substitute_engicalc(expr: str) -> str:
-    replacements = {
-
-    }
-
-    # Replace unit registry and unit conversions with a space
-    expr = re.sub(r'ecc.', '', expr)
-    expr = re.sub(r'Beton.', '', expr)
-
-    # Apply other replacements
-    for key, value in replacements.items():
-        expr = expr.replace(key, value)
-    
-    return expr
 
 def build_equation(assignment: dict, precision: float, symbolic: bool, numeric: bool, evaluate: bool):
     try:
@@ -246,7 +245,8 @@ def build_equation(assignment: dict, precision: float, symbolic: bool, numeric: 
 
     return equation
 
-def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 3, style=None, debug=False):
+
+def put_out(precision: float = 2, symbolic: bool = True, evaluate: bool = False, numeric: bool = True, offset: int = 0, rows: int = 1, style=None, raw=False):
     """Constructs and displays the final Markdown output."""
     parsed_lines = cell_parser(offset)
     equations = [build_equation(assignment = eq, symbolic=symbolic, numeric = numeric,  precision=precision, evaluate=evaluate) for eq in parsed_lines]
@@ -286,12 +286,12 @@ def put_out(precision: float = 2, symbolic: bool = False, evaluate: bool = False
     if style!=None:
         colored_markdown_str = f"::: {{custom-style=\"{style}\"}}\n{markdown_str}\n:::"
         display(Markdown(colored_markdown_str))
-        if debug:
+        if raw:
             print(markdown_str)
 
     else:
         display(Markdown(markdown_str))
-        if debug:
+        if raw:
             print(markdown_str)
 
 
