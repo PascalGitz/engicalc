@@ -1,7 +1,6 @@
 """
 Definiert alle relevanten Einheiten.
 """
-
 from pint import UnitRegistry
 
 # Erstellen eines UnitRegistry-Objekts
@@ -11,34 +10,40 @@ ureg.formatter.default_format = "~P"
 ureg.define('Nm = newton * meter')
 ureg.define('kNm = kilonewton * meter')
 
-# Definition aller relevanten Einheiten
-kg = ureg.kg
-t = ureg.t
 
-mm = ureg.mm
-cm = ureg.cm
-dm = ureg.dm
-m = ureg.m
-km = ureg.km
+units = {"kg": ureg.kg,
+         "t": ureg.t,
 
-N = ureg.N
-kN = ureg.kN
-MN = ureg.MN
+         "kNm": ureg.kNm,
+         "Nm": ureg.Nm,
 
-kNm = ureg.kNm
-Nm = ureg.Nm
+         "N": ureg.N,
+         "kN": ureg.kN,
+         "MN": ureg.MN,
+         
+         "m": ureg.m,
+         "cm": ureg.cm,
+         "dm": ureg.dm,
+         "mm": ureg.mm,
+         "km": ureg.km,
 
-rad = ureg.rad
-deg = ureg.degree
+         "rad": ureg.rad,
+         "deg": ureg.deg,
 
-percent = ureg.percent
-permille = ureg.permille
-s = ureg.s
+         "precent": ureg.percent,
+         "permille": ureg.permille,
 
-degC = ureg.degC
-K = ureg.kelvin
+         "s": ureg.s,
 
-MPa = ureg.MPa
-los = ureg.dimensionless
+         "degC": ureg.degC,
+         "K": ureg.kelvin,
 
-K = ureg.degK
+         "MPa": ureg.MPa,
+         "los": ureg.dimensionless
+
+
+         }
+
+
+globals().update(units)
+
