@@ -1,7 +1,5 @@
-# My Project
-
-
 # EngiCalc
+
 
 EngiCalc is a Python package designed to assist engineers in performing
 frequent calculations more efficiently. It aims to replace Excel in the
