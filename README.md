@@ -6,7 +6,7 @@ frequent calculations more efficiently. It aims to replace Excel in the
 daily workflow by providing easily readable calculation sheets in
 Jupyter Notebooks, which can then be output as Word files using Quarto.
 Python code is easier to check for errors, making it a more reliable
-choice for engineering calculations. The functionality of the package is shown in the [Example](Functionality.pdf).
+choice for engineering calculations. The functionality of the package is shown in the [Example](tests/Functionality.pdf).
 
 ## Installation
 
