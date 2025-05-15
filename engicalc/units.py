@@ -1,6 +1,3 @@
-"""
-Definiert alle relevanten Einheiten.
-"""
 from pint import UnitRegistry
 
 # Erstellen eines UnitRegistry-Objekts
