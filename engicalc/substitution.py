@@ -132,6 +132,7 @@ def substitute_numpy_functions(expr: str) -> str:
             f'{numpy_alias}.abs': 'Abs',
             f'{numpy_alias}.array': 'Matrix',
             f'{numpy_alias}.dot': '*',  # Convert matrix multiplication
+            f'{numpy_alias}.pi': 'pi',  # Convert matrix multiplication
         }
 
         for np_func, sympy_func in numpy_to_sympy.items():
