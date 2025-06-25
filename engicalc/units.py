@@ -36,9 +36,8 @@ units = {"kg": ureg.kg,
          "K": ureg.kelvin,
 
          "MPa": ureg.MPa,
-         "los": ureg.dimensionless
-
-
+         "Hz": ureg.hertz,
+         "los": ureg.dimensionless,
          }
 
 
