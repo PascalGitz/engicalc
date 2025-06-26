@@ -1,35 +1,5 @@
 import ast
 
-input = """var_test
-assign_test = var_test + 10
-
-def test_func():
-    assign_test2 = var_test + 20
-    return assign_test2 
-
-def test_func2():
-    assign_test2 = var_test + 34
-    return assign_test2 
-
-# this is a comment
-def test_func3(a):
-    assign_test2 = var_test + 34*a
-    
-    return assign_test2 
-
-if condition_test == True:
-    assign_test3 = var_test + 30
-
-elif condition_test == False:
-    assign_test3 = var_test + 40
-
-else:
-    assign_test3 = var_test + 50
-
-x = test_func3(4)   
-test_func3(5)
-"""
-
 def get_code(node, lines):
     start = getattr(node, 'lineno', 1) - 1
     end = getattr(node, 'end_lineno', start + 1)
@@ -84,10 +54,3 @@ def cell_content() -> str:
         return cell
     except Exception as e:
         raise RuntimeError(f"Could not retrieve cell content: {e}")
-
-if __name__ == "__main__":
-    # If running as a script, parse the input code
-    print("Input code:")
-    print(input)
-    print("\nParsed output:")
-    print(parse(input))
