@@ -14,18 +14,31 @@ def test_func2():
 # this is a comment
 def test_func3(a):
     assign_test2 = var_test + 34*a
+    
     return assign_test2 
 
 if condition_test == True:
     assign_test3 = var_test + 30
 
+elif condition_test == False:
+    assign_test3 = var_test + 40
+
+else:
+    assign_test3 = var_test + 50
+
 x = test_func3(4)   
+test_func3(5)
 """
 
-def parse(code: str):
+def get_code(node, lines):
+    start = getattr(node, 'lineno', 1) - 1
+    end = getattr(node, 'end_lineno', start + 1)
+    return '\n'.join(lines[start:end])
+
+def parse(code: str,):
     """
     Parses the input code using ast and returns a list of tuples (syntax_type, content).
-    syntax_type: 'name', 'assignment', 'function', 'if', or 'unknown'
+    syntax_type: 'name', 'assignment', 'function', 'if', 'call', or 'unknown'
     content: the source code of the detected object
     """
     results = []
@@ -34,36 +47,47 @@ def parse(code: str):
     except Exception as e:
         return [("error", str(e))]
 
+    lines = code.splitlines()
+
     for node in tree.body:
         if isinstance(node, ast.FunctionDef):
-            # Get the function source code
-            start = node.lineno - 1
-            end = node.end_lineno if hasattr(node, 'end_lineno') else node.lineno
-            lines = code.splitlines()
-            func_code = '\n'.join(lines[start:end])
-            results.append(("function", func_code))
+            results.append(("function", get_code(node, lines)))
         elif isinstance(node, ast.Assign):
-            start = node.lineno - 1
-            end = node.end_lineno if hasattr(node, 'end_lineno') else node.lineno
-            lines = code.splitlines()
-            assign_code = '\n'.join(lines[start:end])
-            results.append(("assignment", assign_code))
+            results.append(("assignment", get_code(node, lines)))
         elif isinstance(node, ast.If):
-            start = node.lineno - 1
-            end = node.end_lineno if hasattr(node, 'end_lineno') else node.lineno
-            lines = code.splitlines()
-            if_code = '\n'.join(lines[start:end])
-            results.append(("if", if_code))
-        elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Name):
-            results.append(("name", node.value.id))
+            results.append(("conditional", get_code(node, lines)))
+        elif isinstance(node, ast.Expr):
+            # Detect function call
+            if isinstance(node.value, ast.Call):
+                # Get the function call as code
+                results.append(("call", get_code(node, lines)))
+            elif isinstance(node.value, ast.Name):
+                results.append(("name", node.value.id))
+            else:
+                results.append(("expression", get_code(node, lines)))
         else:
-            # fallback: try to get the code for unknown nodes
-            start = getattr(node, 'lineno', 1) - 1
-            end = getattr(node, 'end_lineno', start + 1)
-            lines = code.splitlines()
-            unknown_code = '\n'.join(lines[start:end])
-            results.append(("unknown", unknown_code))
+            results.append(("unknown", get_code(node, lines)))
     return results
 
-print(parse(input))
 
+def cell_content() -> str:
+    """
+    Returns the content of the current Jupyter notebook cell as a string.
+    """
+    try:
+        from IPython import get_ipython
+        ip = get_ipython()
+        if ip is None:
+            raise RuntimeError("Not running inside an IPython environment.")
+        # Use ip.history_manager to get the last input (current cell)
+        cell = ip.history_manager.input_hist_raw[-1]
+        return cell
+    except Exception as e:
+        raise RuntimeError(f"Could not retrieve cell content: {e}")
+
+if __name__ == "__main__":
+    # If running as a script, parse the input code
+    print("Input code:")
+    print(input)
+    print("\nParsed output:")
+    print(parse(input))
