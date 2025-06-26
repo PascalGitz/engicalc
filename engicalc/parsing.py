@@ -1,4 +1,5 @@
 import ast
+from IPython import get_ipython
 
 def get_code(node, lines):
     start = getattr(node, 'lineno', 1) - 1
@@ -8,8 +9,8 @@ def get_code(node, lines):
 def parse(code: str,):
     """
     Parses the input code using ast and returns a list of tuples (syntax_type, content).
-    syntax_type: 'name', 'assignment', 'function', 'if', 'call', or 'unknown'
-    content: the source code of the detected object
+    syntax_type: 'name', 'assignment', 'function', 'conditional', or 'expression'
+    content: the source code of the detected object or name
     """
     results = []
     try:
@@ -27,16 +28,11 @@ def parse(code: str,):
         elif isinstance(node, ast.If):
             results.append(("conditional", get_code(node, lines)))
         elif isinstance(node, ast.Expr):
-            # Detect function call
-            if isinstance(node.value, ast.Call):
-                # Get the function call as code
-                results.append(("call", get_code(node, lines)))
-            elif isinstance(node.value, ast.Name):
+            if isinstance(node.value, ast.Name):
                 results.append(("name", node.value.id))
             else:
                 results.append(("expression", get_code(node, lines)))
-        else:
-            results.append(("unknown", get_code(node, lines)))
+        # Ignore all other node types
     return results
 
 
@@ -45,7 +41,6 @@ def cell_content() -> str:
     Returns the content of the current Jupyter notebook cell as a string.
     """
     try:
-        from IPython import get_ipython
         ip = get_ipython()
         if ip is None:
             raise RuntimeError("Not running inside an IPython environment.")

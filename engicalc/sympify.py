@@ -23,19 +23,6 @@ def sympify_expr(parsed_tuple):
         raise ValueError("Input tuple is not of type 'expr'.")
 
 
-def sympify_unknown(parsed_tuple):
-    """
-    Tries to sympify the value of an 'unknown' parsed tuple. If successful, returns the sympy object, otherwise returns the raw string.
-    """
-    typ, value = parsed_tuple
-    if typ == 'unknown':
-        try:
-            return sympify(value)
-        except Exception:
-            return value
-    else:
-        raise ValueError("Input tuple is not of type 'unknown'.")
-
 def sympify_assignment(parsed_tuple):
     """
     If the parsed tuple is of type 'assignment', splits at '=', sympifies lhs as name and rhs as expression, and returns sympy.Eq(lhs, rhs).
@@ -159,7 +146,6 @@ def do_sympify(parsed_tuples):
             objs = sympify_function(parsed)
             result.extend(objs)
         else:
-            obj = sympify_unknown(parsed)
             result.append(obj)
     return result
 

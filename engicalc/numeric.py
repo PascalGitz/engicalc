@@ -1,3 +1,5 @@
+from IPython import get_ipython
+
 def numeric_value(parsed_tuple):
     """
     Given a parsed assignment tuple, returns the numeric value of the assigned variable from the given namespace (defaults to globals()).
