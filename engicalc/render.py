@@ -22,9 +22,7 @@ def build_markdown(parsed_lines, precision: float = 2, symbolic: bool = True, ev
     print(parsed_lines)
     
     equations = [build_equation(eq, precision, symbolic, numeric, evaluate) for eq in parsed_lines]
-    print(equations)
     equations = list(dict.fromkeys(equations))
-    print(equations)
     rows = min(rows, len(equations))
 
     # Construct Markdown output
