@@ -3,12 +3,12 @@ from latex import latexify_name, latexify_expression
 
 class Function:
     def __init__(self, function_str=None):
-        self.name, self.parameters, self.body, self.ret = split_function(function_str)
+        self.name, self.parameters, self.body, self.ret = split(function_str)
         self.latex_name = latexify_name(self.name)
         self.latex_ret = latexify_expression(self.ret)
 
 
-def split_function(function_str):
+def split(function_str):
     """
     Splits a function string into name, parameters, body, and return value.
     - name: function name (without parameters)
