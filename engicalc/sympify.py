@@ -1,98 +1,85 @@
-from sympy import sympify, Eq, Piecewise, latex
+from sympy import sympify, Eq, Piecewise, And, Or
 from engicalc.parsing import parse
 import ast
 
-def sympify_name(parsed_tuple):
-    """
-    If the parsed tuple is of type 'name', sympifies the value and returns the sympy object.
-    """
-    typ, value = parsed_tuple
-    if typ == 'name':
-        return sympify(value)
-    else:
-        raise ValueError("Input tuple is not of type 'name'.")
 
-def sympify_expr(parsed_tuple):
+def sympify_assignment(value):
     """
-    If the parsed tuple is of type 'expr', sympifies the value and returns the sympy object.
+    Splits at '=', sympifies lhs as name and rhs as expression, and returns sympy.Eq(lhs, rhs).
     """
-    typ, value = parsed_tuple
-    if typ == 'expr':
-        return sympify(value)
-    else:
-        raise ValueError("Input tuple is not of type 'expr'.")
+    if '=' not in value:
+        raise ValueError("Assignment does not contain '=' sign.")
+    lhs, rhs = value.split('=', 1)
+    lhs = lhs.strip()
+    rhs = rhs.strip()
+    lhs_sym = sympify(lhs)
+    rhs_sym = sympify(rhs)
+    return Eq(lhs_sym, rhs_sym)
 
+def sympify_conditional(value):
+    """
+    Parses a multi-branch conditional assignment (if/elif/else), each with a single assignment.
+    Handles 'and'/'or' conditions by converting them to sympy logical expressions.
+    Extracts the assignment name, each condition, and each expression, builds a Piecewise, and returns Eq(lhs, Piecewise(...)).
+    """
 
-def sympify_assignment(parsed_tuple):
-    """
-    If the parsed tuple is of type 'assignment', splits at '=', sympifies lhs as name and rhs as expression, and returns sympy.Eq(lhs, rhs).
-    """
-    typ, value = parsed_tuple
-    if typ == 'assignment':
-        if '=' not in value:
-            raise ValueError("Assignment does not contain '=' sign.")
-        lhs, rhs = value.split('=', 1)
-        lhs = lhs.strip()
-        rhs = rhs.strip()
-        lhs_sym = sympify_name(('name', lhs))
-        rhs_sym = sympify_expr(('expr', rhs))
-        return (lhs_sym, rhs_sym)
-    else:
-        raise ValueError("Input tuple is not of type 'assignment'.")
+    def parse_condition(test_node):
+        # Recursively convert ast.BoolOp to sympy And/Or
+        if isinstance(test_node, ast.BoolOp):
+            op = test_node.op
+            values = [parse_condition(v) for v in test_node.values]
+            if isinstance(op, ast.And):
+                return And(*values)
+            elif isinstance(op, ast.Or):
+                return Or(*values)
+        elif isinstance(test_node, ast.Compare):
+            return sympify(ast.unparse(test_node).strip())
+        elif isinstance(test_node, ast.Name):
+            return sympify(test_node.id)
+        else:
+            return sympify(ast.unparse(test_node).strip())
 
-def sympify_conditional(parsed_tuple):
-    """
-    If the parsed tuple is of type 'conditional', uses ast to detect conditionals and their bodies.
-    Recursively parses and sympifies the body for nested conditionals. Returns a Piecewise sympy object.
-    Uses ast.unparse for all code extraction (Python 3.9+ required).
-    """
-    typ, value = parsed_tuple
-    if typ != 'conditional':
-        raise ValueError("Input tuple is not of type 'conditional'.")
-    # Parse the code with ast
     tree = ast.parse(value)
+    node = tree.body[0]
+    if not isinstance(node, ast.If):
+        raise ValueError("Not a conditional statement (if/elif/else block).")
     pieces = []
-    for node in tree.body:
-        if isinstance(node, ast.If):
-            # Get the condition as code
-            cond_code = ast.unparse(node.test)
-            # Get the body as code
-            body_code = '\n'.join([ast.unparse(stmt) for stmt in node.body])
-            parsed_body = parse(body_code)
-            sympified_body = do_sympify(parsed_body)
-            body_obj = sympified_body[0] if sympified_body else None
-            pieces.append((body_obj, sympify(cond_code)))
-            # Handle orelse (elif/else)
-            orelse = node.orelse
-            while orelse:
-                first = orelse[0]
-                if isinstance(first, ast.If):
-                    elif_cond = ast.unparse(first.test)
-                    body_code = '\n'.join([ast.unparse(stmt) for stmt in first.body])
-                    parsed_body = parse(body_code)
-                    sympified_body = do_sympify(parsed_body)
-                    body_obj = sympified_body[0] if sympified_body else None
-                    pieces.append((body_obj, sympify(elif_cond)))
-                    orelse = first.orelse
-                else:
-                    # else block
-                    body_code = '\n'.join([ast.unparse(stmt) for stmt in orelse])
-                    parsed_body = parse(body_code)
-                    sympified_body = do_sympify(parsed_body)
-                    body_obj = sympified_body[0] if sympified_body else None
-                    pieces.append((body_obj, True))
-                    break
-    return Piecewise(*pieces)
+    name = None
+    def handle_branch(assign_node, cond):
+        nonlocal name
+        assign_str = ast.unparse(assign_node).strip()
+        eq_obj = sympify_assignment(assign_str)
+        lhs = eq_obj.lhs
+        rhs = eq_obj.rhs
+        if name is None:
+            name = lhs
+        elif name != lhs:
+            raise ValueError("All assignments in the conditional must assign to the same variable.")
+        pieces.append((rhs, cond))
+    current = node
+    while True:
+        # Handle if/elif
+        if len(current.body) != 1 or not isinstance(current.body[0], ast.Assign):
+            raise ValueError("Each conditional body must contain a single assignment.")
+        cond = parse_condition(current.test)
+        handle_branch(current.body[0], cond)
+        if current.orelse:
+            if isinstance(current.orelse[0], ast.If):
+                current = current.orelse[0]
+            else:
+                # else block
+                if len(current.orelse) != 1 or not isinstance(current.orelse[0], ast.Assign):
+                    raise ValueError("Else block must contain a single assignment.")
+                handle_branch(current.orelse[0], True)
+                break
+        else:
+            break
+    return Eq(name, Piecewise(*pieces))
 
-def sympify_function(parsed_tuple):
+def sympify_function(value):
     """
-    If the parsed tuple is of type 'function', uses ast to extract the function name, parameters, and return statement.
-    Creates an assignment from the function name (with parameters) and return value, sympifies it, and sympifies the rest of the body.
-    Returns all sympified objects.
+    Uses ast to extract the function name, parameters, and return statement. Creates an assignment from the function name (with parameters) and return value, sympifies it, and sympifies the rest of the body. Returns all sympified objects.
     """
-    typ, value = parsed_tuple
-    if typ != 'function':
-        raise ValueError("Input tuple is not of type 'function'.")
     # Parse the function code with ast
     tree = ast.parse(value)
     func_node = next((node for node in tree.body if isinstance(node, ast.FunctionDef)), None)
@@ -112,7 +99,7 @@ def sympify_function(parsed_tuple):
         raise ValueError("No return statement found in function body.")
     # Create assignment string with parameters
     assignment_str = f"{func_name}({param_str}) = {return_expr}"
-    assignment_obj = sympify_assignment(('assignment', assignment_str))
+    assignment_obj = sympify_assignment(assignment_str)
     # Optionally, parse and sympify the rest of the body (excluding return)
     body_code = '\n'.join([
         ast.unparse(stmt)
@@ -129,23 +116,17 @@ def do_sympify(parsed_tuples):
     """
     result = []
     for parsed in parsed_tuples:
-        typ = parsed[0]
-        if typ == 'name':
-            obj = sympify_name(parsed)
-            result.append(obj)
-        elif typ == 'expr':
-            obj = sympify_expr(parsed)
-            result.append(obj)
-        elif typ == 'assignment':
-            obj = sympify_assignment(parsed)
+        typ, value = parsed
+        if typ == 'assignment':
+            obj = sympify_assignment(value)
             result.append(obj)
         elif typ == 'conditional':
-            obj = sympify_conditional(parsed)
+            obj = sympify_conditional(value)
             result.append(obj)
         elif typ == 'function':
-            objs = sympify_function(parsed)
+            objs = sympify_function(value)
             result.extend(objs)
         else:
-            result.append(obj)
+            print('Unknown type:', typ)
     return result
 
