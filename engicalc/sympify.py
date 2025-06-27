@@ -126,7 +126,6 @@ def do_sympify(parsed_tuples):
         elif typ == 'function':
             objs = sympify_function(value)
             result.extend(objs)
-        else:
-            print('Unknown type:', typ)
+
     return result
 

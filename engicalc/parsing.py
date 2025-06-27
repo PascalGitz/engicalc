@@ -27,11 +27,7 @@ def parse(code: str,):
             results.append(("assignment", get_code(node, lines)))
         elif isinstance(node, ast.If):
             results.append(("conditional", get_code(node, lines)))
-        elif isinstance(node, ast.Expr):
-            if isinstance(node.value, ast.Name):
-                results.append(("name", node.value.id))
-            else:
-                results.append(("expression", get_code(node, lines)))
+
         # Ignore all other node types
     return results
 
