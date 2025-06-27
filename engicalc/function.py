@@ -5,7 +5,6 @@ class Function:
     def __init__(self, function_str=None):
         self.name, self.parameters, self.body, self.ret = split_function(function_str)
         self.latex_name = latexify_name(self.name)
-        self.latex_body = None
         self.latex_ret = latexify_expression(self.ret)
 
 
