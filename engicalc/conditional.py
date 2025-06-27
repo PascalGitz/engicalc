@@ -2,6 +2,7 @@ import ast
 from latex import latexify_name, latexify_expression, latexify_conditional
 
 
+
 class Conditional:
     def __init__(self, conditional_str):
         self.name, self.expression, self.value = split(conditional_str)

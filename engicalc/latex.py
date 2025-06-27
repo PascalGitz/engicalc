@@ -2,16 +2,18 @@ from sympy import sympify, latex, Piecewise
 import ast
 from sympy import And, Or
 
+from subs import do_substitution
+
 
 def latexify_name(name):
     # Placeholder for substitution function, to be added later
-    prepared = name  # In the future, apply substitution(prepared)
+    prepared = do_substitution(name)  # In the future, apply substitution(prepared)
     sympy_obj = sympify(prepared)
     return latex(sympy_obj, mul_symbol='dot', order='none')
 
 def latexify_expression(expression):
     # Placeholder for substitution function, to be added later
-    prepared = expression  # In the future, apply substitution(prepared)
+    prepared = do_substitution(expression)  # In the future, apply substitution(prepared)
     sympy_obj = sympify(prepared)
     return latex(sympy_obj, mul_symbol='dot', order='none')
 
@@ -23,7 +25,7 @@ def latexify_conditional(expr_cond_list):
     sympy_tuples = []
     for cond, expr in expr_cond_list:
         cond_obj = _parse_condition_to_sympy(cond) if cond != 'else' else True
-        expr_obj = sympify(expr)
+        expr_obj = sympify(do_substitution(expr))
         sympy_tuples.append((expr_obj, cond_obj))
     pw = Piecewise(*sympy_tuples)
     return latex(pw, mul_symbol='dot', order='none')
@@ -32,6 +34,7 @@ def _parse_condition_to_sympy(cond_str):
     """
     Parse a Python condition string into a sympy logical expression using ast.
     """
+    cond_str = do_substitution(cond_str)
     tree = ast.parse(cond_str, mode='eval')
     def _convert(node):
         if isinstance(node, ast.BoolOp):
@@ -41,8 +44,8 @@ def _parse_condition_to_sympy(cond_str):
             elif isinstance(node.op, ast.Or):
                 return Or(*values)
         elif isinstance(node, ast.Compare):
-            left = sympify(ast.unparse(node.left))
-            rights = [sympify(ast.unparse(comp)) for comp in node.comparators]
+            left = sympify(do_substitution(ast.unparse(node.left)))
+            rights = [sympify(do_substitution(ast.unparse(comp))) for comp in node.comparators]
             ops = node.ops
             result = left
             for op, right in zip(ops, rights):
@@ -60,7 +63,7 @@ def _parse_condition_to_sympy(cond_str):
                     result = result != right
             return result
         else:
-            return sympify(ast.unparse(node))
+            return sympify(do_substitution(ast.unparse(node)))
     return _convert(tree.body)
 
 

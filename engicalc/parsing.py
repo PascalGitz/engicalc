@@ -1,5 +1,8 @@
 import ast
 from IPython import get_ipython
+from assignment import Assignment
+from conditional import Conditional 
+from function import Function
 
 def get_code(node, lines):
     start = getattr(node, 'lineno', 1) - 1
@@ -22,11 +25,11 @@ def parse(code: str,):
 
     for node in tree.body:
         if isinstance(node, ast.FunctionDef):
-            results.append(("function", get_code(node, lines)))
+            results.append(Function(get_code(node, lines)))
         elif isinstance(node, ast.Assign):
-            results.append(("assignment", get_code(node, lines)))
+            results.append(Assignment(get_code(node, lines)))
         elif isinstance(node, ast.If):
-            results.append(("conditional", get_code(node, lines)))
+            results.append(Conditional(get_code(node, lines)))
 
         # Ignore all other node types
     return results
