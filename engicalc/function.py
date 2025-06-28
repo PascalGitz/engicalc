@@ -1,5 +1,5 @@
 import ast
-from latex import latexify_name, latexify_expression
+from latexit import latexify_name, latexify_expression
 
 
 class Function:
@@ -7,20 +7,23 @@ class Function:
         self.name, self.parameters, self.body, self.ret = split(function_str)
         self.latex_name = latexify_name(self.name)
         from parsing import parse
-        self.latex_parameters = [obj.latex_equation for obj in parse(self.body)]
+        self.latex_parameters = [obj.latex_equation for obj in parse(self.parameters)]
         self.latex_body = [obj.latex_equation for obj in parse(self.body)]
         self.latex_ret = latexify_expression(self.ret)
-        # self.latex_equation = self.build_latex_equation()
+        self.latex_equation = self.build_latex_equation()
 
     def build_latex_equation(self, show_name=True, show_expression=True, show_value=True):
-        parts = []
-        if show_name:
-            parts.append(self.latex_name + self.latex_parameters)
-        if show_expression:
-            parts.append(self.body)
-        if show_value and self.latex_ret is not None:
-            parts.append(self.latex_ret)
-        return " = ".join(parts)
+        # Build the function signature with value
+        name_part = self.latex_name + '(' + ', '.join(self.latex_parameters) + ')'
+        value_part = self.latex_ret if (show_value and self.latex_ret is not None) else ''
+        first_line = f"{name_part} = {value_part}" if value_part else name_part
+        # Indent each body line with a single \quad
+        if show_expression and self.latex_body:
+            body_lines = [r'\\\quad ' + line for line in self.latex_body]
+            body_part = ''.join(body_lines)
+            return f"{first_line}{body_part}"
+        else:
+            return first_line
 
 
 def split(function_str):

@@ -1,6 +1,6 @@
 import ast
-from latex import latexify_name, latexify_expression, latexify_conditional
-
+from latexit import latexify_name,  latexify_conditional, latexify_value
+from sympy import latex
 
 
 class Conditional:
@@ -8,8 +8,20 @@ class Conditional:
         self.name, self.expression, self.value = split(conditional_str)
         self.latex_name = latexify_name(self.name)
         self.latex_expression = latexify_conditional(self.expression)
-        self.latex_value = self.value
+        self.latex_value = latexify_value(self.value)
+        self.latex_equation = self.build_latex_equation()
 
+
+    def build_latex_equation(self, show_name=True, show_expression=True, show_value=True):
+        parts = []
+        if show_name:
+            parts.append(self.latex_name)
+        if show_expression:
+            parts.append(self.latex_expression)
+        if show_value and self.latex_value is not None:
+            parts.append(self.latex_value)
+        return " = ".join(parts)
+    
 def split(parsed_str):
     """
     Splits a conditional string into name, expression (list of (condition, expr)), and value (from user_ns).

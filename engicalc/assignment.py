@@ -1,11 +1,12 @@
-from latex import latexify_name, latexify_expression
+from latexit import latexify_name, latexify_expression, latexify_value
+from sympy import latex
 
 class Assignment:
     def __init__(self, assignment_str):
         self.name, self.expression, self.value = split(assignment_str)
         self.latex_name = latexify_name(self.name)
         self.latex_expression = latexify_expression(self.expression)
-        self.latex_value = self.value
+        self.latex_value = latexify_value(self.value)
         self.latex_equation = self.build_latex_equation()
 
     def build_latex_equation(self, show_name=True, show_expression=True, show_value=True):
@@ -15,7 +16,7 @@ class Assignment:
         if show_expression:
             parts.append(self.latex_expression)
         if show_value and self.latex_value is not None:
-            parts.append(str(self.latex_value))
+            parts.append(self.latex_value)
         return " = ".join(parts)
 
 def split(assignment_str):

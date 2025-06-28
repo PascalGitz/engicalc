@@ -1,7 +1,6 @@
 from sympy import sympify, latex, Piecewise
 import ast
 from sympy import And, Or
-
 from subs import do_substitution
 
 
@@ -65,6 +64,26 @@ def _parse_condition_to_sympy(cond_str):
         else:
             return sympify(do_substitution(ast.unparse(node)))
     return _convert(tree.body)
+
+def latexify_value(value_str, precision=4):
+    """
+    Converts a string representing a value to a LaTeX string using sympy.latex.
+    The precision of floats can be adjusted with the precision argument.
+    Rounds the value, splits by space, applies do_substitution, sympify, and latex to the RHS, then joins back.
+    """
+    if value_str is not None:
+        val = value_str
+        val = round(val, precision)
+        parts = str(val).split(' ', 1)
+        if len(parts) == 2:
+            lhs, rhs = parts
+            rhs = do_substitution(rhs)
+            rhs = sympify(rhs)
+            rhs = latex(rhs, mul_symbol='dot', order='none')
+            formatted = f"{lhs} \ {rhs}"
+        else:
+            formatted = str(val)
+        return formatted
 
 
 

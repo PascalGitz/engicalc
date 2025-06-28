@@ -3,6 +3,7 @@ from IPython import get_ipython
 from assignment import Assignment
 from conditional import Conditional 
 from function import Function
+from name import Name
 
 def get_code(node, lines):
     start = getattr(node, 'lineno', 1) - 1
@@ -22,7 +23,6 @@ def parse(code: str,):
         return [("error", str(e))]
 
     lines = code.splitlines()
-
     for node in tree.body:
         if isinstance(node, ast.FunctionDef):
             results.append(Function(get_code(node, lines)))
@@ -30,7 +30,9 @@ def parse(code: str,):
             results.append(Assignment(get_code(node, lines)))
         elif isinstance(node, ast.If):
             results.append(Conditional(get_code(node, lines)))
-
+        elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Name):
+            # Single variable name as a statement (e.g., 'var')
+            results.append(Name(node.value.id))
         # Ignore all other node types
     return results
 
