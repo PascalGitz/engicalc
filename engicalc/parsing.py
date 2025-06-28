@@ -8,11 +8,34 @@ from name import Name
 
 
 class Cell:
-    def __init__(self, show_name=True, show_expression=True, show_value=True, precision=4):
+    def __init__(self, show_name=True, show_expression=True, show_value=True, precision=4, rows=3):
         self.cell_content = cell_content()
         self.blocks = parse(self.cell_content, show_name, show_expression, show_value, precision)
-        self.precision = precision  
-    
+        self.latex_aligned = self.build_aligned(rows)
+
+    def _repr_markdown_(self):
+        return self.latex_aligned
+
+    def build_aligned(self, rows=3):
+        """
+        Build a LaTeX aligned block from the cell's blocks (self.blocks).
+        The number of equations per row is determined by the 'rows' parameter.
+        """
+        # Extract latex_equation from each block if available, else str(block)
+        equations = [block.latex_equation for block in self.blocks]
+        rows = min(rows, len(equations))
+        markdown_str = "$$\\begin{aligned}"
+        for i in range(0, len(equations), rows):
+            row = equations[i : i + rows]
+            row_str = "  \\quad  ".join([f"&{eq}" for eq in row])
+            if len(row) < rows and rows != 1:
+                row_str += " \\quad  " * (rows - len(row))
+            markdown_str += row_str
+            if i + rows < len(equations):
+                markdown_str += " \\\\ "
+        markdown_str += "\\end{aligned}$$"
+        return markdown_str
+
 
 def parse(code: str, show_name, show_expression, show_value, precision) -> list:
     """

@@ -1,6 +1,6 @@
 from latexit import latexify_name, latexify_expression, latexify_value
 from sympy import latex
-from cell import Cell
+
 
 class Assignment():
     def __init__(self, assignment_str, show_name=True, show_expression=True, show_value=True, precision=4):

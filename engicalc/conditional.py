@@ -5,9 +5,9 @@ from sympy import latex
 
 
 class Conditional():
-    def __init__(self, show_name, show_expression, show_value, precision, conditional_str):
+    def __init__(self, conditional_str, show_name=True, show_expression=True, show_value=True, precision=4, ):
         self.show_name = show_name
-        self.show_expression = show_expression
+        self.show_expression = show_expression 
         self.show_value = show_value
         self.precision = precision
         self.conditional_str = conditional_str

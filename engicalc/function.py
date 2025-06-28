@@ -4,6 +4,11 @@ from latexit import latexify_name, latexify_expression
 
 class Function():
     def __init__(self, function_str, show_name, show_expression, show_value, precision):
+        self.show_name = show_name
+        self.show_expression = show_expression
+        self.show_value = show_value
+        self.precision = precision
+        # Parse the function string into name, parameters, body, and return value
         self.name, self.parameters, self.body, self.ret = split(function_str)
         self.latex_name = latexify_name(self.name)
         from parsing import parse
@@ -15,13 +20,11 @@ class Function():
     def build_latex_equation(self):
         # Build the function signature with value
         name_part = self.latex_name + '(' + ', '.join(self.latex_parameters) + ')'
-        value_part = self.latex_ret if (show_value and self.latex_ret is not None) else ''
+        value_part = self.latex_ret if (self.show_value and self.latex_ret is not None) else ''
         first_line = f"{name_part} = {value_part}" if value_part else name_part
-        # Indent each body line with a single \quad
-        if show_expression and self.latex_body:
-            body_lines = [r'\\\quad ' + line for line in self.latex_body]
-            body_part = ''.join(body_lines)
-            return f"{first_line}{body_part}"
+        if self.show_expression and self.latex_body:
+            body_part = '\\\\ & \\quad '.join(self.latex_body)
+            return f"{first_line}\\\\ & \\quad {body_part}"
         else:
             return first_line
 
