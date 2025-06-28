@@ -3,22 +3,29 @@ from latexit import latexify_name,  latexify_conditional, latexify_value
 from sympy import latex
 
 
-class Conditional:
-    def __init__(self, conditional_str):
+
+class Conditional():
+    def __init__(self, show_name, show_expression, show_value, precision, conditional_str):
+        self.show_name = show_name
+        self.show_expression = show_expression
+        self.show_value = show_value
+        self.precision = precision
+        self.conditional_str = conditional_str
+        # Parse the conditional string into name, expression, and value
         self.name, self.expression, self.value = split(conditional_str)
         self.latex_name = latexify_name(self.name)
         self.latex_expression = latexify_conditional(self.expression)
-        self.latex_value = latexify_value(self.value)
+        self.latex_value = latexify_value(self.value, self.precision)
         self.latex_equation = self.build_latex_equation()
 
 
-    def build_latex_equation(self, show_name=True, show_expression=True, show_value=True):
+    def build_latex_equation(self):
         parts = []
-        if show_name:
+        if self.show_name:
             parts.append(self.latex_name)
-        if show_expression:
+        if self.show_expression:
             parts.append(self.latex_expression)
-        if show_value and self.latex_value is not None:
+        if self.show_value and self.latex_value is not None:
             parts.append(self.latex_value)
         return " = ".join(parts)
     
