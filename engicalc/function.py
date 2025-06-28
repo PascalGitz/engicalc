@@ -27,7 +27,7 @@ def split(function_str):
     """
     Splits a function string into name, parameters, body, and return value.
     - name: function name (without parameters)
-    - parameters: string of parameters in tuple form, e.g. '(x, a=2, c)'
+    - parameters: string of parameters, each on a new line (e.g. 'x\na=2\nc')
     - body: function body as a string (excluding return)
     - ret: return expression as a string
     """
@@ -35,7 +35,7 @@ def split(function_str):
     func_node = next((node for node in tree.body if isinstance(node, ast.FunctionDef)), None)
     if func_node is None:
         raise ValueError("No function definition found in the provided string.")
-    # Get the parameters as a tuple string, including default values
+    # Get the parameters as a string, each on a new line
     args = func_node.args.args
     defaults = func_node.args.defaults
     num_args = len(args)
@@ -48,7 +48,7 @@ def split(function_str):
             param_strs.append(f"{arg.arg}={default_val}")
         else:
             param_strs.append(arg.arg)
-    param_names = param_strs
+    param_names = "\n".join(param_strs)
     # Get the function name
     name = func_node.name
     # Get the body as code (excluding return)
