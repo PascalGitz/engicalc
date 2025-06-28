@@ -7,7 +7,7 @@ class Function:
         self.name, self.parameters, self.body, self.ret = split(function_str)
         self.latex_name = latexify_name(self.name)
         from parsing import parse
-        self.latex_parameters = [parse(obj)[0].latex_equation for obj in self.parameters]
+        self.latex_parameters = [obj.latex_equation for obj in parse(self.body)]
         self.latex_body = [obj.latex_equation for obj in parse(self.body)]
         self.latex_ret = latexify_expression(self.ret)
         # self.latex_equation = self.build_latex_equation()
