@@ -51,10 +51,16 @@ def parse(code: str, show_name, show_expression, show_value, precision) -> list:
 
     lines = code.splitlines()
     for node in tree.body:
+        # Skip if the node is a call or instantiation of Cell (even in assignment)
+        if isinstance(node, ast.Assign):
+            value = node.value
+            if isinstance(value, ast.Call):
+                func = value.func
+                if (hasattr(func, 'id') and func.id == 'Cell') or (hasattr(func, 'attr') and func.attr == 'Cell'):
+                    continue
+            results.append(Assignment(get_code(node, lines), show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))
         if isinstance(node, ast.FunctionDef):
             results.append(Function(get_code(node, lines), show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))
-        elif isinstance(node, ast.Assign):
-            results.append(Assignment(get_code(node, lines), show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))
         elif isinstance(node, ast.If):
             results.append(Conditional(get_code(node, lines), show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))
         elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Name):
