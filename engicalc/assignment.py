@@ -22,7 +22,7 @@ class Assignment():
             parts.append(self.latex_expression)
         if self.show_value and self.latex_value is not None:
             parts.append(self.latex_value)
-        return " = ".join(parts)
+        return "=".join(parts)
 
 def split(assignment_str):
     """

@@ -3,18 +3,17 @@ import ast
 from sympy import And, Or
 from subs import do_substitution
 
-
 def latexify_name(name):
     # Placeholder for substitution function, to be added later
     prepared = do_substitution(name)  # In the future, apply substitution(prepared)
     sympy_obj = sympify(prepared)
-    return latex(sympy_obj, mul_symbol='dot', order='none')
+    return latex(sympy_obj, order='none')
 
 def latexify_expression(expression):
     # Placeholder for substitution function, to be added later
     prepared = do_substitution(expression)  # In the future, apply substitution(prepared)
     sympy_obj = sympify(prepared)
-    return latex(sympy_obj, mul_symbol='dot', order='none')
+    return latex(sympy_obj, order='none')
 
 def latexify_conditional(expr_cond_list):
     """
@@ -27,7 +26,7 @@ def latexify_conditional(expr_cond_list):
         expr_obj = sympify(do_substitution(expr))
         sympy_tuples.append((expr_obj, cond_obj))
     pw = Piecewise(*sympy_tuples)
-    return latex(pw, mul_symbol='dot', order='none')
+    return latex(pw, order='none')
 
 def _parse_condition_to_sympy(cond_str):
     """
@@ -79,8 +78,8 @@ def latexify_value(value_str, precision=4):
             lhs, rhs = parts
             rhs = do_substitution(rhs)
             rhs = sympify(rhs)
-            rhs = latex(rhs, mul_symbol='dot', order='none')
-            formatted = f"{lhs} \ {rhs}"
+            rhs = latex(rhs,  order='none')
+            formatted = f"{lhs} {rhs}"
         else:
             formatted = str(val)
         return formatted

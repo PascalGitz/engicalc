@@ -8,10 +8,14 @@ from name import Name
 
 
 class Cell:
-    def __init__(self, show_name=True, show_expression=True, show_value=True, precision=4, rows=3):
+    def __init__(self, show_name=True, show_expression=True, show_value=True, precision=2, rows=1):
         self.cell_content = cell_content()
         self.blocks = parse(self.cell_content, show_name, show_expression, show_value, precision)
         self.latex_aligned = self.build_aligned(rows)
+
+    def __repr__(self):
+        # Return the raw LaTeX string, with single backslashes and no $$
+        return self.latex_aligned
 
     def _repr_markdown_(self):
         return self.latex_aligned
@@ -20,19 +24,18 @@ class Cell:
         """
         Build a LaTeX aligned block from the cell's blocks (self.blocks).
         The number of equations per row is determined by the 'rows' parameter.
+        Each row is spaced with \quad and aligned at the start of each equation.
+        If there are more equations than rows, continue on the next line.
         """
-        # Extract latex_equation from each block if available, else str(block)
         equations = [block.latex_equation for block in self.blocks]
-        rows = min(rows, len(equations))
-        markdown_str = "$$\\begin{aligned}"
+        markdown_str = "$$\\begin{aligned}" + "&"
         for i in range(0, len(equations), rows):
             row = equations[i : i + rows]
-            row_str = "  \\quad  ".join([f"&{eq}" for eq in row])
-            if len(row) < rows and rows != 1:
-                row_str += " \\quad  " * (rows - len(row))
+            # Add \quad between equations, align at start
+            row_str = " \\quad ".join([f" {eq}" for eq in row])
             markdown_str += row_str
             if i + rows < len(equations):
-                markdown_str += " \\\\ "
+                markdown_str += " \\\\ & "
         markdown_str += "\\end{aligned}$$"
         return markdown_str
 
