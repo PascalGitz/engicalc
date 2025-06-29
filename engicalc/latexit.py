@@ -1,19 +1,34 @@
-from sympy import sympify, latex, Piecewise
+from sympy import Piecewise
 import ast
-from sympy import And, Or
+from sympy import And, Or, Symbol
 from subs import do_substitution
+import numpy as np
+
+
+
+
+from sympy import sympify as sympy_sympify
+def so(expr):
+    """Wrapper for sympy.sympify with evaluate=False."""
+    return sympy_sympify(expr, evaluate=False)
+
+from sympy import latex as sympy_latex
+def ltex(expr):
+    """Wrapper for sympy.sympify with evaluate=False."""
+    return sympy_latex(expr, mul_symbol=None, ln_notation = True, order='none')
+
 
 def latexify_name(name):
     # Placeholder for substitution function, to be added later
     prepared = do_substitution(name)  # In the future, apply substitution(prepared)
-    sympy_obj = sympify(prepared)
-    return latex(sympy_obj, order='none')
+    sympy_obj = so(prepared)
+    return ltex(sympy_obj)
 
 def latexify_expression(expression):
     # Placeholder for substitution function, to be added later
     prepared = do_substitution(expression)  # In the future, apply substitution(prepared)
-    sympy_obj = sympify(prepared)
-    return latex(sympy_obj, order='none')
+    sympy_obj = so(prepared)
+    return ltex(sympy_obj)
 
 def latexify_conditional(expr_cond_list):
     """
@@ -23,16 +38,16 @@ def latexify_conditional(expr_cond_list):
     sympy_tuples = []
     for cond, expr in expr_cond_list:
         cond_obj = _parse_condition_to_sympy(cond) if cond != 'else' else True
-        expr_obj = sympify(do_substitution(expr))
+        expr_obj = so(do_substitution(expr))
         sympy_tuples.append((expr_obj, cond_obj))
     pw = Piecewise(*sympy_tuples)
-    return latex(pw, order='none')
+    return ltex(pw)
 
 def _parse_condition_to_sympy(cond_str):
     """
     Parse a Python condition string into a sympy logical expression using ast.
     """
-    cond_str = do_substitution(cond_str)
+    # cond_str = do_substitution(cond_str)
     tree = ast.parse(cond_str, mode='eval')
     def _convert(node):
         if isinstance(node, ast.BoolOp):
@@ -42,8 +57,8 @@ def _parse_condition_to_sympy(cond_str):
             elif isinstance(node.op, ast.Or):
                 return Or(*values)
         elif isinstance(node, ast.Compare):
-            left = sympify(do_substitution(ast.unparse(node.left)))
-            rights = [sympify(do_substitution(ast.unparse(comp))) for comp in node.comparators]
+            left = so(do_substitution(ast.unparse(node.left)))
+            rights = [so(do_substitution(ast.unparse(comp))) for comp in node.comparators]
             ops = node.ops
             result = left
             for op, right in zip(ops, rights):
@@ -61,7 +76,7 @@ def _parse_condition_to_sympy(cond_str):
                     result = result != right
             return result
         else:
-            return sympify(do_substitution(ast.unparse(node)))
+            return so(do_substitution(ast.unparse(node)))
     return _convert(tree.body)
 
 def latexify_value(value_str, precision=4):
@@ -72,14 +87,14 @@ def latexify_value(value_str, precision=4):
     """
     if value_str is not None:
         val = value_str
-        val = round(val, precision)
+        val = np.round(val, precision)
         parts = str(val).split(' ', 1)
         if len(parts) == 2:
             lhs, rhs = parts
             rhs = do_substitution(rhs)
-            rhs = sympify(rhs)
-            rhs = latex(rhs,  order='none')
-            formatted = f"{lhs} {rhs}"
+            rhs = so(rhs)
+            rhs = ltex(rhs)
+            formatted = f"{lhs}{rhs}"
         else:
             formatted = str(val)
         return formatted

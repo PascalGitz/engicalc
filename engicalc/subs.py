@@ -1,6 +1,7 @@
 import re
-from sympy import Symbol
 from units import units 
+
+
 
 def do_substitution(input_str):
     """
@@ -106,7 +107,7 @@ def substitute_units(input_str):
         input_str = re.sub(f"{engicalc_alias}\\.", "", input_str)
     # Use the provided units dict (keys as replacors)
     for unit_name, unit_variable in units.items():
-        formatted_unit = r"\\\\mathrm{\\\\ "+str(unit_variable).replace('deg', '°') + "}"
+        formatted_unit = r"\\\\mathrm{"+str(unit_variable).replace('deg', '°') + "}"
         symbol_unit = f'Symbol("{formatted_unit}")'
         # Match unit at word boundary or after number/operator
         input_str = re.sub(rf'(?<![a-zA-Z_]){re.escape(unit_name)}(?![a-zA-Z_])', symbol_unit, input_str)
