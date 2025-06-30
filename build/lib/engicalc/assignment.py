@@ -1,4 +1,4 @@
-from .latexit import latexify_name, latexify_expression, latexify_value
+from latexit import latexify_name, latexify_expression, latexify_value
 from sympy import latex
 
 

@@ -1,5 +1,5 @@
 import ast
-from .latexit import latexify_name,  latexify_conditional, latexify_value
+from latexit import latexify_name,  latexify_conditional, latexify_value
 from sympy import latex
 
 

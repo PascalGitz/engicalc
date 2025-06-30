@@ -1,4 +1,4 @@
-from .latexit import latexify_name, latexify_expression
+from latexit import latexify_name, latexify_expression
 
 class Name:
     def __init__(self, name_str):

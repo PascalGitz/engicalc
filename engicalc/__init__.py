@@ -1,2 +1,2 @@
-from units import *
-from parsing import Cell
+from .units import *
+from .parsing import Cell

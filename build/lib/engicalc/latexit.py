@@ -1,6 +1,7 @@
-from sympy import Piecewise, And, Or, Symbol
+from sympy import Piecewise
 import ast
-from .subs import do_substitution
+from sympy import And, Or, Symbol
+from subs import do_substitution
 import numpy as np
 
 

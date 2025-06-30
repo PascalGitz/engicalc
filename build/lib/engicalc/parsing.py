@@ -1,9 +1,9 @@
 import ast
 from IPython import get_ipython
-from .assignment import Assignment
-from .conditional import Conditional 
-from .function import Function
-from .name import Name
+from assignment import Assignment
+from conditional import Conditional 
+from function import Function
+from name import Name
 
 
 
