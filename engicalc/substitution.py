@@ -23,6 +23,7 @@ replacements_specials ={
         'diam': r'\\oslash',
         'eps':'varepsilon', #convenience
         'infty': r'\\infty',
+        'sum':r'\\sum',
 }
 
 

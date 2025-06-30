@@ -7,7 +7,6 @@ from engicalc.parsing import *
 
 
 
-
 def render(precision: float = 2, symbolic: bool = True, evaluate: bool = False, numeric: bool = True, rows: int = 1, style=None, raw=False):
     """Parses variables from the current cell and renders Markdown output."""
     
@@ -16,7 +15,7 @@ def render(precision: float = 2, symbolic: bool = True, evaluate: bool = False, 
     if raw== False:
         display(Markdown(raw_string))
     if raw== True:
-        return raw_string
+        print(raw_string)
     
 def render_func(precision: float = 2, symbolic: bool = True, evaluate: bool = False, numeric: bool = True, rows: int = 1, style=None, raw=False):
     """Parses variables from the function where it is called and renders Markdown output."""
@@ -26,7 +25,7 @@ def render_func(precision: float = 2, symbolic: bool = True, evaluate: bool = Fa
     if raw== False:
         display(Markdown(raw_string))
     if raw== True:
-        return raw_string
+        print(raw_string)
     
 def render_list(list, precision: float = 2, symbolic: bool = True, evaluate: bool = False, numeric: bool = True, rows: int = 1, style=None, raw=True):
     """Parses variables from the function where it is called and renders Markdown output."""
@@ -83,9 +82,19 @@ def build_equation(assignment: dict, precision: float, symbolic: bool, numeric: 
         var = format_symbolic(assignment['variable_name'], evaluate=evaluate)
         expression = format_symbolic(assignment['expression'], evaluate=evaluate)
         result = format_value(assignment['result'], precision=precision)
-
         if var == expression:
             equation = f'{var}& = {result}'
+
+        # # handling the ugly units multiplication in the expression (x = 20 \cdot kN = 20 kN)
+        # # Search for the global variable names in the global_expressions
+        # variable_names = [format_symbolic(entry['variable_name']) for entry in global_expressions]
+        # # Check if any word exactly matches a variable name
+        # pattern = r'\b(' + '|'.join(variable_names) + r')\b'
+        # # Search for exact word match
+        # print(expression, variable_names)
+        # if not re.search(pattern, expression):
+        #     equation = f'{var}& = {result}'
+
         else:
             # Check if the expression can be converted to a float
             try:

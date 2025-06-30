@@ -44,6 +44,7 @@ def parse_cell():
     cell_variables = []
 
     for node in ast.walk(tree):
+        print(node)
         # Handle variable assignments
         if isinstance(node, ast.Assign):
             variable_name = node.targets[0].id  # Extract variable name
@@ -60,6 +61,7 @@ def parse_cell():
             update_global_expressions(variable_name, expression, result)
 
         if isinstance(node, ast.Expr) and isinstance(node.value, ast.Name):  # Standalone variable reference
+            print('expr')
             variable_name = node.value.id  # Extract variable name
 
             recalled_variable = return_recalled_variables(variable_name)
