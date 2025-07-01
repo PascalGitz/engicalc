@@ -90,7 +90,7 @@ def latexify_value(value_str, precision=4):
         parts = str(val).split(' ', 1)
         if len(parts) == 2:
             lhs, rhs = parts
-            rhs = do_substitution(rhs)
+            rhs = do_substitution(rhs).replace('%', "Symbol('\\%')").replace('‰', "Symbol('‰')") # dirty hack for special signs
             rhs = so(rhs)
             rhs = ltex(rhs)
             formatted = f"{lhs}{rhs}"
