@@ -2,7 +2,7 @@ from sympy import Piecewise, And, Or, Symbol
 import ast
 from .subs import do_substitution
 import numpy as np
-
+import re
 
 
 
@@ -14,7 +14,7 @@ def so(expr):
 from sympy import latex as sympy_latex
 def ltex(expr):
     """Wrapper for sympy.sympify with evaluate=False."""
-    return sympy_latex(expr, mul_symbol=None, ln_notation = True, order='none')
+    return sympy_latex(expr, mul_symbol='dot', ln_notation = True, order='none')
 
 
 def latexify_name(name):
@@ -87,16 +87,15 @@ def latexify_value(value_str, precision=4):
     if value_str is not None:
         val = value_str
         val = np.round(val, precision)
-        parts = str(val).split(' ', 1)
-        if len(parts) == 2:
-            lhs, rhs = parts
-            rhs = do_substitution(rhs).replace('%', "Symbol('\\%')").replace('‰', "Symbol('‰')") # dirty hack for special signs
-            rhs = so(rhs)
-            rhs = ltex(rhs)
-            formatted = f"{lhs}{rhs}"
-        else:
-            formatted = str(val)
-        return formatted
+        # val = re.sub(r' (?!/)', '*', str(val), 1)
+        val = str(val).replace(' ', '*', 1)
+        val = str(val).replace('*/', '/', 1) #dirty hack again
+
+        val = do_substitution(val).replace('%', "Symbol('\\%')").replace('‰', "Symbol('‰')") # dirty hack for special signs
+        val = so(val)
+        val = ltex(val)
+        return val 
+
 
 
 
