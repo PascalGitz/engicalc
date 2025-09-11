@@ -37,7 +37,6 @@ def substitute_numpy(input_str):
         f'{numpy_alias}.log': 'log',
         f'{numpy_alias}.sqrt': 'sqrt',
         f'{numpy_alias}.abs': 'Abs',
-        f'{numpy_alias}.array': 'Matrix',
         f'{numpy_alias}.dot': '*',
         f'{numpy_alias}.pi': 'pi',
     }
