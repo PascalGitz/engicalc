@@ -14,7 +14,7 @@ def so(expr):
 from sympy import latex as sympy_latex
 def ltex(expr):
     """Wrapper for sympy.sympify with evaluate=False."""
-    return sympy_latex(expr, mul_symbol='dot', ln_notation = True, order='none')
+    return sympy_latex(expr, mul_symbol=' ', ln_notation = True, order='none')
 
 
 def latexify_name(name):
