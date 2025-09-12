@@ -8,6 +8,7 @@ def do_substitution(input_str):
     Applies all substitution functions to the input string and returns the result.
     """
     s = substitute_numpy(input_str)
+    s = substitute_lists(s)
     s = substitute_pint(s)
     s = substitute_specials(s)
     s = substitute_units(s)
@@ -36,6 +37,7 @@ def substitute_numpy(input_str):
         f'{numpy_alias}.exp': 'exp',
         f'{numpy_alias}.log': 'log',
         f'{numpy_alias}.sqrt': 'sqrt',
+        f'{numpy_alias}.array': 'Matrix',
         f'{numpy_alias}.abs': 'Abs',
         f'{numpy_alias}.dot': '*',
         f'{numpy_alias}.pi': 'pi',
@@ -68,6 +70,14 @@ def substitute_specials(input_str):
             return f'Symbol("{replaced}")'
         return var
     return re.sub(var_pattern, repl, input_str)
+
+def substitute_lists(input_str):
+    """
+    Replaces Python list brackets [] with sympy Matrix brackets [[]] in the input string.
+    """
+    s = re.sub(r'\[', 'Matrix([', input_str)
+    s = re.sub(r'\]', '])', s)
+    return s
 
 
 

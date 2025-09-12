@@ -14,7 +14,7 @@ def so(expr):
 from sympy import latex as sympy_latex
 def ltex(expr):
     """Wrapper for sympy.sympify with evaluate=False."""
-    return sympy_latex(expr, mul_symbol=' ', ln_notation = True, order='none')
+    return sympy_latex(expr, mul_symbol='dot', ln_notation = True, order='none')
 
 
 def latexify_name(name):
@@ -38,14 +38,14 @@ def latexify_value(value_str, precision=4):
     if value_str is not None:
         val = value_str
         val = np.round(val, precision)
-        # val = re.sub(r' (?!/)', '*', str(val), 1)
+       
         val = str(val).replace(' ', '*', 1)
         val = str(val).replace('*/', '/', 1) #dirty hack again
 
         val = do_substitution(val).replace('%', "Symbol('\\%')").replace('‰', "Symbol('‰')") # dirty hack for special signs
         val = so(val)
         val = ltex(val)
-        return val 
+        return (val) 
 
 
 
