@@ -25,6 +25,7 @@ deg = ureg.deg
 percent = ureg.percent
 permille = ureg.permille
 s = ureg.s
+h = ureg.h
 degC = ureg.degC
 K = ureg.kelvin
 MPa = ureg.MPa
