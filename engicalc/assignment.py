@@ -18,9 +18,9 @@ class Assignment():
         parts = []
         if self.show_name:
             parts.append(self.latex_name)
-        if self.show_expression:
+        if self.show_expression and self.latex_expression != self.latex_value:
             parts.append(self.latex_expression)
-        if self.show_value and self.latex_value is not None:
+        if self.show_value and self.latex_value is not None :
             parts.append(self.latex_value)
         return "=".join(parts)
 
