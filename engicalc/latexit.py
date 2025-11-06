@@ -49,12 +49,11 @@ def latexify_value(value_str, precision=4):
         # print(val)
 
         # replace blankspaces between number and unit with *
-        pattern = r'(?<=\d|\])\s+(?=[A-Za-zµ%/])'
+        pattern = r'(?<=\d|\])\s+(?=[A-Za-zµ%‰/])'
         val = re.sub(pattern, '*', str(val))
         # print(val)
 
         val = str(val).replace('*/', '/', 1) #dirty hack again
-        # print(val)
 
         val = do_substitution(val).replace('%', "Symbol('\\%')").replace('‰', "Symbol('‰')") # dirty hack for special signs
         val = so(val)
