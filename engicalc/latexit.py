@@ -38,9 +38,23 @@ def latexify_value(value_str, precision=4):
     if value_str is not None:
         val = value_str
         val = np.round(val, precision)
-       
-        val = str(val).replace(' ', '*', 1)
+        # print(val)
+
+        # replace blankspaces inside brackets with ,
+        def replace_inside(match):
+            inner = match.group(1)
+            return inner.replace(' ', ',')
+        pattern = r'(?<=\[)([^]]+)(?=\])'
+        val = re.sub(pattern, replace_inside, str(val))
+        # print(val)
+
+        # replace blankspaces between number and unit with *
+        pattern = r'(?<=\d|\])\s+(?=[A-Za-zµ%/])'
+        val = re.sub(pattern, '*', str(val))
+        # print(val)
+
         val = str(val).replace('*/', '/', 1) #dirty hack again
+        # print(val)
 
         val = do_substitution(val).replace('%', "Symbol('\\%')").replace('‰', "Symbol('‰')") # dirty hack for special signs
         val = so(val)
