@@ -1,9 +1,8 @@
-from sympy import Piecewise
+from sympy import Piecewise, And, Or, Symbol
 import ast
-from sympy import And, Or, Symbol
-from subs import do_substitution
+from .subs import do_substitution
 import numpy as np
-
+import re
 
 
 
@@ -15,7 +14,7 @@ def so(expr):
 from sympy import latex as sympy_latex
 def ltex(expr):
     """Wrapper for sympy.sympify with evaluate=False."""
-    return sympy_latex(expr, mul_symbol=None, ln_notation = True, order='none')
+    return sympy_latex(expr, mul_symbol='dot', ln_notation = True, order='none').replace('\\cdot', '\\')
 
 
 def latexify_name(name):
@@ -30,55 +29,6 @@ def latexify_expression(expression):
     sympy_obj = so(prepared)
     return ltex(sympy_obj)
 
-def latexify_conditional(expr_cond_list):
-    """
-    Takes a list of (condition, expression) tuples, parses conditions to sympy logic,
-    constructs a sympy.Piecewise, and returns its LaTeX representation.
-    """
-    sympy_tuples = []
-    for cond, expr in expr_cond_list:
-        cond_obj = _parse_condition_to_sympy(cond) if cond != 'else' else True
-        expr_obj = so(do_substitution(expr))
-        sympy_tuples.append((expr_obj, cond_obj))
-    pw = Piecewise(*sympy_tuples)
-    return ltex(pw)
-
-def _parse_condition_to_sympy(cond_str):
-    """
-    Parse a Python condition string into a sympy logical expression using ast.
-    """
-    # cond_str = do_substitution(cond_str)
-    tree = ast.parse(cond_str, mode='eval')
-    def _convert(node):
-        if isinstance(node, ast.BoolOp):
-            values = [_convert(v) for v in node.values]
-            if isinstance(node.op, ast.And):
-                return And(*values)
-            elif isinstance(node.op, ast.Or):
-                return Or(*values)
-        elif isinstance(node, ast.Compare):
-            left = so(do_substitution(ast.unparse(node.left)))
-            rights = [so(do_substitution(ast.unparse(comp))) for comp in node.comparators]
-            ops = node.ops
-            result = left
-            for op, right in zip(ops, rights):
-                if isinstance(op, ast.Lt):
-                    result = result < right
-                elif isinstance(op, ast.LtE):
-                    result = result <= right
-                elif isinstance(op, ast.Gt):
-                    result = result > right
-                elif isinstance(op, ast.GtE):
-                    result = result >= right
-                elif isinstance(op, ast.Eq):
-                    result = result == right
-                elif isinstance(op, ast.NotEq):
-                    result = result != right
-            return result
-        else:
-            return so(do_substitution(ast.unparse(node)))
-    return _convert(tree.body)
-
 def latexify_value(value_str, precision=4):
     """
     Converts a string representing a value to a LaTeX string using sympy.latex.
@@ -88,16 +38,28 @@ def latexify_value(value_str, precision=4):
     if value_str is not None:
         val = value_str
         val = np.round(val, precision)
-        parts = str(val).split(' ', 1)
-        if len(parts) == 2:
-            lhs, rhs = parts
-            rhs = do_substitution(rhs)
-            rhs = so(rhs)
-            rhs = ltex(rhs)
-            formatted = f"{lhs}{rhs}"
-        else:
-            formatted = str(val)
-        return formatted
+        # print(val)
+
+        # replace blankspaces inside brackets with ,
+        def replace_inside(match):
+            inner = match.group(1)
+            return inner.replace(' ', ',')
+        pattern = r'(?<=\[)([^]]+)(?=\])'
+        val = re.sub(pattern, replace_inside, str(val))
+        # print(val)
+
+        # replace blankspaces between number and unit with *
+        pattern = r'(?<=\d|\])\s+(?=[A-Za-zµ%‰/])'
+        val = re.sub(pattern, '*', str(val))
+        # print(val)
+
+        val = str(val).replace('*/', '/', 1) #dirty hack again
+
+        val = do_substitution(val).replace('%', "Symbol('\\%')").replace('‰', "Symbol('‰')") # dirty hack for special signs
+        val = so(val)
+        val = ltex(val)
+        return (val) 
+
 
 
 

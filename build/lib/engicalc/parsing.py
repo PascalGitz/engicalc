@@ -1,9 +1,7 @@
 import ast
 from IPython import get_ipython
-from assignment import Assignment
-from conditional import Conditional 
-from function import Function
-from name import Name
+from .assignment import Assignment
+from .name import Name
 
 
 
@@ -62,13 +60,9 @@ def parse(code: str, show_name, show_expression, show_value, precision) -> list:
                 if (hasattr(func, 'id') and func.id == 'Cell') or (hasattr(func, 'attr') and func.attr == 'Cell'):
                     continue
             results.append(Assignment(get_code(node, lines), show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))
-        if isinstance(node, ast.FunctionDef):
-            results.append(Function(get_code(node, lines), show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))
-        elif isinstance(node, ast.If):
-            results.append(Conditional(get_code(node, lines), show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))
         elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Name):
             # Single variable name as a statement (e.g., 'var')
-            results.append(Name(node.value.id))
+            results.append(Name(node.value.id, show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))
         # Ignore all other node types
     return results
 

@@ -48,7 +48,7 @@ units = {
     "km": km,
     "rad": rad,
     "deg": "°",
-    "permille": percent,
+    "percent": percent,
     "permille": permille,
     "s": s,
     "degC": degC,

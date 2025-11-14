@@ -25,7 +25,7 @@ def latexify_name(name):
 
 def latexify_expression(expression):
     # Placeholder for substitution function, to be added later
-    prepared = do_substitution(expression)  # In the future, apply substitution(prepared)
+    prepared = do_substitution(expression) # In the future, apply substitution(prepared)
     sympy_obj = so(prepared)
     return ltex(sympy_obj)
 

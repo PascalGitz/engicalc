@@ -3,8 +3,6 @@ README.md
 pyproject.toml
 engicalc/__init__.py
 engicalc/assignment.py
-engicalc/conditional.py
-engicalc/function.py
 engicalc/latexit.py
 engicalc/name.py
 engicalc/parsing.py

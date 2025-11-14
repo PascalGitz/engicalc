@@ -29,6 +29,7 @@ degC = ureg.degC
 K = ureg.kelvin
 MPa = ureg.MPa
 Hz = ureg.hertz
+kJ = ureg.kJ
 los = ureg.dimensionless
 
 # Build the units dictionary only from the explicitly defined unit variables above
@@ -54,5 +55,6 @@ units = {
     "K": K,
     "MPa": MPa,
     "Hz": Hz,
+    "kJ": kJ,
     "los": los
 }
