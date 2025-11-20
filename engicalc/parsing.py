@@ -7,9 +7,9 @@ from .function import Function
 
 
 class Cell:
-    def __init__(self, show_name=True, show_expression=True, show_value=True, precision=2, rows=1):
+    def __init__(self, show_name=True, show_expression=True, show_value=True, precision=2, rows=1, evaluate = False):
         self.cell_content = cell_content()
-        self.blocks = parse(self.cell_content, show_name, show_expression, show_value, precision)
+        self.blocks = parse(self.cell_content, show_name, show_expression, show_value, precision, evaluate)
         self.latex_aligned = self.build_aligned(rows)
 
     def __repr__(self):
@@ -51,7 +51,7 @@ class Cell:
         return markdown_str
 
 
-def parse(code: str, show_name, show_expression, show_value, precision) -> list:
+def parse(code: str, show_name, show_expression, show_value, precision, evaluate) -> list:
     """
     Parses the input code using ast and returns a list of tuples (syntax_type, content).
     syntax_type: 'name', 'assignment', 'function', 'conditional', or 'expression'
@@ -73,8 +73,6 @@ def parse(code: str, show_name, show_expression, show_value, precision) -> list:
                 if (hasattr(func, 'id') and func.id == 'Cell') or (hasattr(func, 'attr') and func.attr == 'Cell'):
                     continue
             results.append(Assignment(get_code(node, lines), show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))
-        if isinstance(node, ast.FunctionDef):
-            results.append(Function(get_code(node, lines), show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))         
         elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Name):
             # Single variable name as a statement (e.g., 'var')
             results.append(Name(node.value.id, show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))
