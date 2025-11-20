@@ -2,6 +2,7 @@ import ast
 from IPython import get_ipython
 from .assignment import Assignment
 from .name import Name
+from .function import Function
 
 
 
@@ -25,7 +26,19 @@ class Cell:
         Each row is spaced with \quad and aligned at the start of each equation.
         If there are more equations than rows, continue on the next line.
         """
-        equations = [block.latex_equation for block in self.blocks]
+        def _flatten(items):
+            out = []
+            for it in items:
+                val = getattr(it, "latex_equation", it)
+                if isinstance(val, str):
+                    out.append(val)
+                elif isinstance(val, (list, tuple)):
+                    out.extend(_flatten(val))
+                else:
+                    out.append(str(val))
+            return out
+
+        equations = _flatten(self.blocks)
         markdown_str = "$$\\begin{aligned}" + "&"
         for i in range(0, len(equations), rows):
             row = equations[i : i + rows]
@@ -61,7 +74,7 @@ def parse(code: str, show_name, show_expression, show_value, precision) -> list:
                     continue
             results.append(Assignment(get_code(node, lines), show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))
         if isinstance(node, ast.FunctionDef):
-            
+            results.append(Function(get_code(node, lines), show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))         
         elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Name):
             # Single variable name as a statement (e.g., 'var')
             results.append(Name(node.value.id, show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))
