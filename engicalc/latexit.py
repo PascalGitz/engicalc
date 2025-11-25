@@ -7,9 +7,9 @@ import re
 
 
 from sympy import sympify as sympy_sympify
-def so(expr):
+def so(expr, eval = False):
     """Wrapper for sympy.sympify with evaluate=False."""
-    return sympy_sympify(expr, evaluate=False)
+    return sympy_sympify(expr, evaluate=eval)
 
 from sympy import latex as sympy_latex
 def ltex(expr):
@@ -23,9 +23,9 @@ def latexify_name(name):
     sympy_obj = so(prepared)
     return ltex(sympy_obj)
 
-def latexify_expression(expression):
+def latexify_expression(expression, evaluate=False):
     # Placeholder for substitution function, to be added later
-    prepared = do_substitution(expression) # In the future, apply substitution(prepared)
+    prepared = do_substitution(expression)  # In the future, apply substitution(prepared)
     sympy_obj = so(prepared)
     return ltex(sympy_obj)
 
