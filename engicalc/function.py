@@ -2,16 +2,17 @@ import ast
 from .latexit import latexify_name, latexify_expression
 
 class Function():
-    def __init__(self, function_str, show_name, show_expression, show_value, precision):
+    def __init__(self, function_str, show_name, show_expression, show_value, precision, evaluate):
         self.show_name = show_name
         self.show_expression = show_expression
         self.show_value = show_value
         self.precision = precision
+        self.evaluate = evaluate
         # Parse the function string into name, parameters, body, and return value
         self.name, self.parameters, self.ret = split(function_str)
         self.latex_name = latexify_name(self.name)
         from .parsing import parse
-        self.latex_parameters = [obj.latex_equation for obj in parse(self.parameters, show_name, show_expression=False, show_value=False, precision=1)]
+        self.latex_parameters = [obj.latex_equation for obj in parse(self.parameters, show_name, show_expression=False, show_value=False, precision=1, evaluate=evaluate)]
         self.latex_ret = latexify_expression(self.ret)
         self.latex_equation = self.build_latex_equation()
 

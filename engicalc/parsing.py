@@ -60,9 +60,9 @@ def parse(code: str, show_name, show_expression, show_value, precision, evaluate
                 func = value.func
                 if (hasattr(func, 'id') and func.id == 'Cell') or (hasattr(func, 'attr') and func.attr == 'Cell'):
                     continue
-            results.append(Assignment(get_code(node, lines), show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))
+            results.append(Assignment(get_code(node, lines), show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision, evaluate=evaluate))
         if isinstance(node, ast.FunctionDef):
-            results.append(Function(get_code(node, lines), show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))
+            results.append(Function(get_code(node, lines), show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision, evaluate=evaluate))
         elif isinstance(node, ast.Expr) and isinstance(node.value, ast.Name):
             # Single variable name as a statement (e.g., 'var')
             results.append(Name(node.value.id, show_name=show_name, show_expression=show_expression, show_value=show_value, precision=precision))
